@@ -1,10 +1,7 @@
 from flask import Blueprint, render_template, request, jsonify
 
 adventure_bp = Blueprint('adventure', __name__,
-    url_prefix='/games/adventure',
-    template_folder='templates',
-    static_folder='static',
-    static_url_path='/static'
+    url_prefix='/api/games/adventure',
 )
 
 @adventure_bp.route('/npc_api', methods=['POST'])

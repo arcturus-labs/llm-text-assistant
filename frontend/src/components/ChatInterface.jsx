@@ -24,7 +24,7 @@ const ChatInterface = () => {
 
     try {
       // Send to API
-      const response = await fetch('/games/adventure/npc_api', {
+      const response = await fetch('/api/games/adventure/npc_api', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

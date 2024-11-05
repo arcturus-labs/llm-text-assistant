@@ -5,7 +5,10 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/games/adventure': 'http://localhost:5555'  // Adjust port to match your Flask server
+      '/api': {
+        target: 'http://localhost:5555',
+        changeOrigin: true
+      }
     }
   }
 })

@@ -4,7 +4,7 @@ def create_app():
     app = Flask(__name__)
     
     # Register blueprints
-    from routes.games.adventure.routes import adventure_bp
+    from app.routes.games.adventure.routes import adventure_bp
     app.register_blueprint(adventure_bp)
     
     # Your original route can stay here or move to a main_routes.py
