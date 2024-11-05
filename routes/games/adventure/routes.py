@@ -7,10 +7,6 @@ adventure_bp = Blueprint('adventure', __name__,
     static_url_path='/static'
 )
 
-@adventure_bp.route('/npc_demo')
-def npc_demo():
-    return render_template('npc_demo.html')
-
 @adventure_bp.route('/npc_api', methods=['POST'])
 def npc_api():
     data = request.get_json()
