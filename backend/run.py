@@ -1,16 +1,14 @@
 from flask import Flask
 
 def create_app():
-    app = Flask(__name__)
+    app = Flask(__name__, static_folder='../frontend/dist', static_url_path='')
     
     # Register blueprints
     from app.routes.games.adventure.routes import adventure_bp
-    app.register_blueprint(adventure_bp)
+    from app.routes.static.routes import static_bp
     
-    # Your original route can stay here or move to a main_routes.py
-    @app.route('/')
-    def hello():
-        return 'Hello, Fly.io!'
+    app.register_blueprint(adventure_bp)
+    app.register_blueprint(static_bp)
     
     return app
 

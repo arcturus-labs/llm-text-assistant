@@ -1,0 +1,9 @@
+**/node_modules
+**/__pycache__
+**/*.pyc
+**/venv
+.git
+.env
+*.log
+# Don't ignore the dist folder as we need it
+# !frontend/dist
