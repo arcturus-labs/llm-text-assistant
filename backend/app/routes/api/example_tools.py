@@ -30,7 +30,7 @@ def get_listing(address):
     artifact = Artifact(
         identifier="18bacG4a",
         type="application/json", 
-        title="742 Maple Street Listing", 
+        title=address, 
         content=content)
     return str(artifact)
 
@@ -38,7 +38,7 @@ def get_comparables(address):
     artifact = Artifact(
         identifier="3baf9f83", 
         type="application/json", 
-        title="742 Maple Street Comparables", 
+        title=f"{address} Comparables", 
         content="""\
 [
     {

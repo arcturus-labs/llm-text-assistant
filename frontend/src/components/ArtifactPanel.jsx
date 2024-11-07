@@ -1,9 +1,36 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ArtifactTab from './ArtifactTab';
 import './ArtifactPanel.css';
 
 function ArtifactPanel({ artifacts, onArtifactChange }) {
   const [activeTab, setActiveTab] = useState(0);
+
+  useEffect(() => {
+    // Function to handle hash changes
+    const handleHashChange = () => {
+      const hash = window.location.hash.slice(1); // Remove the # symbol
+      if (hash) {
+        const index = artifacts.findIndex(artifact => artifact.identifier === hash);
+        if (index !== -1) {
+          setActiveTab(index);
+        }
+      }
+    };
+
+    // Set initial tab based on URL hash
+    handleHashChange();
+
+    // Listen for hash changes
+    window.addEventListener('hashchange', handleHashChange);
+
+    // Cleanup listener
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [artifacts]);
+
+  const handleTabClick = (index, identifier) => {
+    setActiveTab(index);
+    window.location.hash = identifier;
+  };
 
   const handleContentChange = (identifier, newContent) => {
     onArtifactChange(identifier, newContent);
@@ -16,7 +43,7 @@ function ArtifactPanel({ artifacts, onArtifactChange }) {
           <button
             key={artifact.identifier}
             className={`tab-button ${activeTab === index ? 'active' : ''}`}
-            onClick={() => setActiveTab(index)}
+            onClick={() => handleTabClick(index, artifact.identifier)}
             title={artifact.identifier}
           >
             {artifact.title}
