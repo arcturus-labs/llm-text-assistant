@@ -1,56 +1,32 @@
 .app {
-  max-width: 1200px;
+  max-width: 800px;
   margin: 0 auto;
   padding: 20px;
+  text-align: center;
 }
 
-.chat-container {
-  max-width: 800px;
+.echo-container {
   margin: 20px auto;
   padding: 20px;
   border: 1px solid #ccc;
   border-radius: 5px;
 }
 
-.chat-history {
-  min-height: 400px;
-  margin-bottom: 20px;
-  padding: 10px;
-  background-color: #f9f9f9;
-  border-radius: 5px;
-  overflow-y: auto;
-}
-
-.message {
-  margin: 10px 0;
-  padding: 10px;
-  border-radius: 5px;
-  color: #333;
-}
-
-.user-message {
-  background-color: #e3f2fd;
-  margin-left: 20%;
-}
-
-.npc-message {
-  background-color: #f5f5f5;
-  margin-right: 20%;
-}
-
-.input-container {
+form {
   display: flex;
   gap: 10px;
+  margin-bottom: 20px;
+  justify-content: center;
 }
 
-.input-container input {
-  flex-grow: 1;
+input {
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
+  width: 300px;
 }
 
-.input-container button {
+button {
   padding: 8px 16px;
   background-color: #4CAF50;
   color: white;
@@ -59,6 +35,15 @@
   cursor: pointer;
 }
 
-.input-container button:hover {
+button:hover {
   background-color: #45a049;
+}
+
+.echo-box {
+  margin-top: 20px;
+  padding: 20px;
+  background-color: #f5f5f5;
+  border-radius: 5px;
+  min-height: 50px;
+  color: black;
 }

@@ -53,7 +53,8 @@ docker build -t demo .
 docker run -p 8080:8080 demo
 ```
 
-The application will be available at http://localhost:8080
+3. Test the application by opening http://localhost:8080 in your browser.
+
 
 ## Deploying to Fly.io
 
