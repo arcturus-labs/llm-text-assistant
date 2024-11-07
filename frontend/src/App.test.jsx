@@ -4,63 +4,71 @@ import { vi } from 'vitest'
 import App from './App'
 
 describe('App Component', () => {
-  it('renders the main heading', () => {
+  it('renders chat input and send button', () => {
     render(<App />)
-    expect(screen.getByText('Echo Demo')).toBeInTheDocument()
-  })
-
-  it('renders input field and button', () => {
-    render(<App />)
-    expect(screen.getByPlaceholderText('Type something...')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Echo' })).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Type your message...')).toBeInTheDocument()
+    expect(screen.getByText('Send')).toBeInTheDocument()
   })
 
   it('handles input change', () => {
     render(<App />)
-    const input = screen.getByPlaceholderText('Type something...')
-    fireEvent.change(input, { target: { value: 'test' } })
-    expect(input.value).toBe('test')
+    const input = screen.getByPlaceholderText('Type your message...')
+    fireEvent.change(input, { target: { value: 'test message' } })
+    expect(input.value).toBe('test message')
   })
 
-  it('handles form submission', async () => {
+  it('handles message submission', async () => {
+    const mockResponse = {
+      status: 'success',
+      messages: [
+        { role: 'user', content: 'test message' },
+        { role: 'assistant', content: 'Test response' }
+      ],
+      artifacts: []
+    }
+
     global.fetch = vi.fn(() =>
       Promise.resolve({
-        json: () => Promise.resolve('TEST'),
+        json: () => Promise.resolve(mockResponse)
       })
     )
 
     render(<App />)
-    const input = screen.getByPlaceholderText('Type something...')
-    const button = screen.getByRole('button', { name: 'Echo' })
+    const input = screen.getByPlaceholderText('Type your message...')
+    const button = screen.getByText('Send')
 
-    fireEvent.change(input, { target: { value: 'test' } })
+    fireEvent.change(input, { target: { value: 'test message' } })
     fireEvent.click(button)
 
     await waitFor(() => {
-      expect(screen.getByText('TEST')).toBeInTheDocument()
+      expect(screen.getByText('test message')).toBeInTheDocument()
+      expect(screen.getByText('Test response')).toBeInTheDocument()
     })
 
-    expect(global.fetch).toHaveBeenCalledWith('/api/echo', {
+    expect(global.fetch).toHaveBeenCalledWith('/api/chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify('test'),
+      body: JSON.stringify({
+        messages: [{ role: 'user', content: 'test message' }],
+        artifacts: []
+      })
     })
   })
 
-  it('handles fetch error', async () => {
+  it('handles API error', async () => {
     global.fetch = vi.fn(() => Promise.reject('API Error'))
 
     render(<App />)
-    const input = screen.getByPlaceholderText('Type something...')
-    const button = screen.getByRole('button', { name: 'Echo' })
+    const input = screen.getByPlaceholderText('Type your message...')
+    const button = screen.getByText('Send')
 
-    fireEvent.change(input, { target: { value: 'test' } })
+    fireEvent.change(input, { target: { value: 'test message' } })
     fireEvent.click(button)
 
     await waitFor(() => {
-      expect(screen.getByText('Error occurred')).toBeInTheDocument()
+      expect(screen.getByText('Error: Failed to send message')).toBeInTheDocument()
     })
   })
 })
