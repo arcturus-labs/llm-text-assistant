@@ -31,17 +31,9 @@ Test with:
 
 ## Building for running in Docker
 
-1. Build the frontend: 
+Build and run the application in Docker with:
 ```bash
-cd frontend
-npm run build
-```
-This creates a `dist` directory with the production build.
-
-2. Build and run the Docker container:
-```bash
-docker build -t demo .
-docker run -p 8080:8080 demo
+scripts/run-docker.sh
 ```
 
 3. Test the application by opening http://localhost:8080 in your browser.
