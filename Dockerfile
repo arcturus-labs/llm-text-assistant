@@ -9,6 +9,7 @@ RUN npm run build
 FROM python:3.11-slim
 WORKDIR /app
 ENV PYTHONPATH=/app/backend
+ENV ANTHROPIC_API_KEY=""
 
 # Install Python dependencies
 COPY backend/requirements.txt .
