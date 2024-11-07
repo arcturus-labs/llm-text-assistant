@@ -3,24 +3,11 @@ import { useState } from 'react';
 import ArtifactPanel from './components/ArtifactPanel';
 import MessageContent from './components/MessageContent';
 import './App.css';
-
+//TODO! add spinner while waiting for response
 function App() {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
-  const [artifacts, setArtifacts] = useState([
-    {
-      identifier: 'artifact1',
-      type: 'text/plain',
-      title: 'Notes',
-      content: ''
-    },
-    {
-      identifier: 'artifact2',
-      type: 'text/markdown',
-      title: 'Documentation',
-      content: ''
-    }
-  ]);
+  const [artifacts, setArtifacts] = useState([]);
 
   const handleArtifactChange = (identifier, newContent) => {
     setArtifacts(artifacts.map(artifact => 

@@ -40,4 +40,22 @@
   resize: none;
   font-family: inherit;
   font-size: inherit;
+}
+
+.tool-usage-box {
+  margin: 8px 0;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #f8f9fa;
+}
+
+.tool-header {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.tool-input, .tool-output {
+  margin: 4px 0;
+  word-break: break-word;
 } 

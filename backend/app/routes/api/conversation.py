@@ -1,4 +1,5 @@
-import json
+#TODO!
+# - make clicking on a link in chat open the artifact in the Artifact Viewer
 import re
 import os
 
@@ -191,7 +192,6 @@ class Conversation:
         assistant_messages.append(response.content[0].text)
         assistant_message = "\n".join(assistant_messages)
         self.messages.append({"role": "assistant", "content": assistant_message})
-        
         artifacts, messages = self._extract_messages_and_artifacts()
 
         return {
@@ -222,7 +222,7 @@ class Conversation:
         """
         Extracts artifacts from the conversation and returns a list of messages with the artifacts replaced by anchor tags.
         """
-        artifacts = []
+        artifacts = self.artifacts
         new_messages = []
 
         # Process each message
@@ -344,8 +344,6 @@ class DumbConversation:
         # Handle potential tool use
         assistant_messages = []
         while response.stop_reason == "tool_use":
-            print("\n"+str(response.content))
-
             tool_result_messages  = []
             for block in response.content:
                 if block.type != "tool_use":
@@ -384,7 +382,6 @@ class DumbConversation:
         assistant_messages.append(response.content[0].text)
         assistant_message = "\n".join(assistant_messages)
         self.messages.append({"role": "assistant", "content": assistant_message})
-        print(assistant_message)
         return assistant_message
     
     def _process_tool_call(self, tool_name, tool_input):
