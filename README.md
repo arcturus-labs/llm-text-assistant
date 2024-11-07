@@ -7,24 +7,9 @@ Don't modify this repo. Instead, fork it and modify your fork.
 ## Development Setup
 
 ### Frontend (React)
-
-From the project root:
+Run frontend with:
 ```bash
-cd frontend
-npm install
-npm run dev
-```
-
-The React development server will run on http://localhost:5173
-
-As a reminder, the react frontend was created using Vite using this command:
-```bash
-npm create vite@latest client -- --template react
-```
-
-You might also try with tailwind:
-```bash
-npm create vite@latest frontend -- --template template-vite-react-ts-tailwind
+scripts/run-frontend.sh
 ```
 
 Test with:
@@ -33,16 +18,10 @@ Test with:
 ```
 
 ### Backend (Flask)
-From the project root:
+Run backend with:
 ```bash
-cd backend
-python -m venv venv
-source venv/bin/activate 
-pip install -r requirements.txt
-python run.py
+scripts/run-frontend.sh
 ```
-
-The Flask server will run on http://localhost:5555. Also, the backend will serve the static frontend files from the `backend/static` directory.
 
 Test with:
 ```bash
