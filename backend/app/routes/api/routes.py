@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
-from anthropic import Anthropic
-import os
+from .conversation import Conversation
+from .example_tools import tools
+
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
 @api_bp.route('/echo', methods=['POST'])
@@ -12,22 +13,29 @@ def echo():
 def chat():
     data = request.get_json()
     messages = data.get('messages', [])
-    print(messages)
-    
-    client = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
+    user_message = messages[-1]['content']
+    messages = messages[:-1]
+    artifacts = data.get('artifacts', [])
     
     try:
-        response = client.messages.create(
-            model="claude-3-5-sonnet-latest",
+        conversation = Conversation(
+            tools=tools,
             messages=messages,
-            max_tokens=1000,
+            artifacts=artifacts,
         )
+        response = conversation.say(user_message)
+        
+        print(response) 
         return jsonify({
-            'response': response.content[0].text,
+            'messages': response['messages'],
+            'artifacts': [artifact.dict() for artifact in response['artifacts']],
             'status': 'success'
         })
     except Exception as e:
+        print(f"Error in chat endpoint: {str(e)}", flush=True)
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'error': str(e),
             'status': 'error'
-        }), 500 
+        }), 500
