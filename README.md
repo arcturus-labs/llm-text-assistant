@@ -2,6 +2,8 @@
 
 The goal is to demonstrate a simple Flask/React application that can be deployed to Fly.io.
 
+Don't modify this repo. Instead, fork it and modify your fork.
+
 ## Development Setup
 
 ### Frontend (React)

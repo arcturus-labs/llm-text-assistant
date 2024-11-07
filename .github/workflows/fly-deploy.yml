@@ -5,6 +5,12 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'frontend/**'
+      - 'backend/**'
+      - 'scripts/**'
+      - 'fly.toml'
+      - '.github/workflows/**'
 
 jobs:
   frontend-tests:
