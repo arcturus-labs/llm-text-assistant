@@ -25,6 +25,11 @@ You might also try with tailwind:
 npm create vite@latest frontend -- --template template-vite-react-ts-tailwind
 ```
 
+Test with:
+```bash
+npm test
+```
+
 ### Backend (Flask)
 From the project root:
 ```bash
@@ -37,10 +42,15 @@ python run.py
 
 The Flask server will run on http://localhost:5555. Also, the backend will serve the static frontend files from the `backend/static` directory.
 
+Test with:
+```bash
+make test
+```
+
 
 ## Building for running in Docker
 
-1. Build the frontend: Run ./build.sh which pretty much does the following:
+1. Build the frontend: 
 ```bash
 cd frontend
 npm run build

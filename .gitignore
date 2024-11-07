@@ -13,6 +13,7 @@ env/
 venv/
 ENV/
 .flaskenv
+.pytest_cache
 
 # React/Node
 node_modules/

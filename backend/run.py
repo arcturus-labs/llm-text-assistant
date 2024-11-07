@@ -1,11 +1,11 @@
 from flask import Flask
 
+from app.routes.api.routes import api_bp
+from app.routes.static.routes import static_bp
+    
+
 def create_app():
     app = Flask(__name__, static_folder='../frontend/dist', static_url_path='')
-    
-    # Register blueprints
-    from app.routes.api.routes import api_bp
-    from app.routes.static.routes import static_bp
     
     app.register_blueprint(api_bp)
     app.register_blueprint(static_bp)
