@@ -7,7 +7,6 @@ const ChatInterface = () => {
   const chatHistoryRef = useRef(null);
 
   useEffect(() => {
-    // Scroll to bottom whenever messages change
     if (chatHistoryRef.current) {
       chatHistoryRef.current.scrollTop = chatHistoryRef.current.scrollHeight;
     }
@@ -24,20 +23,21 @@ const ChatInterface = () => {
 
     try {
       // Send to API
-      const response = await fetch('/api/games/adventure/npc_api', {
+      const response = await fetch('/api/echo', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          messages: [...messages, userMessage]
-        })
+        body: JSON.stringify(content)
       });
 
-      const npcMessage = await response.json();
+      const echoedContent = await response.json();
       
-      // Add NPC response
-      setMessages(prev => [...prev, npcMessage]);
+      // Add echo response
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: echoedContent
+      }]);
 
     } catch (error) {
       console.error('Error:', error);
