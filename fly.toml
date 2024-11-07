@@ -1,10 +1,10 @@
-# fly.toml app configuration file generated for scratch-old-paper-560 on 2024-11-04T17:48:15-06:00
+# fly.toml app configuration file generated for scratch-dawn-thunder-3420 on 2024-11-05T12:39:31-06:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'scratch-old-paper-560'
-primary_region = 'atl'
+app = 'scratch-dawn-thunder-3420'
+primary_region = 'ord'
 
 [build]
 
