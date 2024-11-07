@@ -29,7 +29,7 @@ npm create vite@latest frontend -- --template template-vite-react-ts-tailwind
 
 Test with:
 ```bash
-npm test
+./scripts/run-frontend-tests.sh
 ```
 
 ### Backend (Flask)
@@ -46,7 +46,7 @@ The Flask server will run on http://localhost:5555. Also, the backend will serve
 
 Test with:
 ```bash
-make test
+./scripts/run-backend-tests.sh
 ```
 
 
