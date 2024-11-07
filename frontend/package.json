@@ -7,7 +7,11 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "coverage": "vitest run --coverage"
   },
   "dependencies": {
     "react": "^18.3.1",
@@ -15,6 +19,9 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.0.1",
+    "@testing-library/user-event": "^14.5.2",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.3",
@@ -23,6 +30,9 @@
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.14",
     "globals": "^15.11.0",
-    "vite": "^5.4.10"
+    "identity-obj-proxy": "^3.0.0",
+    "jsdom": "^25.0.1",
+    "vite": "^5.4.10",
+    "vitest": "^2.1.4"
   }
 }
