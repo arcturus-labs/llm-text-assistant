@@ -58,6 +58,8 @@ docker run -p 8080:8080 demo
 
 ## Deploying to Fly.io
 
+Git commit your changes.
+
 Generate the fly.toml file with:
 ```bash
 fly launch --no-deploy
@@ -67,3 +69,7 @@ Then deploy with:
 ```bash
 fly deploy
 ```
+
+### Deploy using actions
+
+ Git commit and push to github. The action will build the frontend and deploy the application to fly.io.

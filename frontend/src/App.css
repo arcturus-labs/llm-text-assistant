@@ -45,5 +45,6 @@ button:hover {
   background-color: #f5f5f5;
   border-radius: 5px;
   min-height: 50px;
-  color: black;
+  color: rgb(233, 15, 15);
+  font-weight: bold;
 }
