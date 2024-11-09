@@ -15,8 +15,6 @@ function App() {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [artifacts, setArtifacts] = useState([]);
-  const [userEmail, setUserEmail] = useState('');
-  const [authorized, setAuthorized] = useState(false);
   const subscriptionCheckRef = useRef();
 
   const handleArtifactChange = (identifier, newContent) => {
@@ -70,13 +68,7 @@ function App() {
 
   return (
     <div className="app">
-      <SubscriptionCheck
-        ref={subscriptionCheckRef}
-        userEmail={userEmail}
-        setUserEmail={setUserEmail}
-        authorized={authorized}
-        setAuthorized={setAuthorized}
-      />
+      <SubscriptionCheck ref={subscriptionCheckRef} />
       <div className="chat-container">
         <div className="chat-history">
           {messages.map((message, index) => (
