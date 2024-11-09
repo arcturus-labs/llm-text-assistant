@@ -1,13 +1,23 @@
 import React from 'react';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import ArtifactPanel from './components/ArtifactPanel';
 import MessageContent from './components/MessageContent';
+import SubscriptionCheck from './components/SubscriptionCheck';
 import './App.css';
 //TODO! add spinner while waiting for response
+//TODO! pull the user's email and auth status from cookies
+//- if they are authed, then run future commands
+//- if they have an email but are not authed, then prompt them make sure it's correct and make sure they've checked their email for confirmation, and once they submit, re-run the auth check
+//- if they don't have an email, then prompt them for their email and run the auth check, and return with an "auth ok" or the above dialog
+
+
 function App() {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [artifacts, setArtifacts] = useState([]);
+  const [userEmail, setUserEmail] = useState('');
+  const [authorized, setAuthorized] = useState(false);
+  const subscriptionCheckRef = useRef();
 
   const handleArtifactChange = (identifier, newContent) => {
     setArtifacts(artifacts.map(artifact => 
@@ -21,6 +31,10 @@ function App() {
     e.preventDefault();
     
     if (!inputMessage.trim()) return;
+
+    if (!subscriptionCheckRef.current.checkSubscription()) {
+      return;
+    }
 
     const newMessages = [...messages, { role: 'user', content: inputMessage }];
     setMessages(newMessages);
@@ -56,6 +70,13 @@ function App() {
 
   return (
     <div className="app">
+      <SubscriptionCheck
+        ref={subscriptionCheckRef}
+        userEmail={userEmail}
+        setUserEmail={setUserEmail}
+        authorized={authorized}
+        setAuthorized={setAuthorized}
+      />
       <div className="chat-container">
         <div className="chat-history">
           {messages.map((message, index) => (
