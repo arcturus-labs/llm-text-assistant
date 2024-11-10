@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from .conversation import Conversation, Artifact
+from .conversation import Conversation, DumbConversation, Artifact
 from .example_tools import tools
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
@@ -28,6 +28,7 @@ def chat():
         messages = response['messages']
         artifacts = response['artifacts']
         
+        print("AAAAAA",messages)
         return jsonify({
             'messages': process_tool_uses_and_results(messages),
             'artifacts': [artifact.dict() for artifact in artifacts],

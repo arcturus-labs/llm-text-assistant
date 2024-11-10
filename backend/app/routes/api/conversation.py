@@ -306,25 +306,22 @@ class Conversation:
 
 
 class DumbConversation:
-    def __init__(self, system=None, tools=None, messages=None):
-        self.client = anthropic.Anthropic()
-        self.model = "claude-3-5-sonnet-latest"
-        self.system = system
+    def __init__(self, tools=None, messages=None, artifacts=None):
+        self.client = anthropic.Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
+        self.model = "claude-3-5-sonnet-20241022"
         self.messages = messages or []
+        self.artifacts = []  # DumbConversation doesn't support artifacts
         self.tools = tools or []
         
     def say(self, message):
-        self.messages.append(
-            {
-                "role": "user", 
-                "content": message
-            }
-        )
-        system_message = self.system or ''
+        self.messages.append({
+            "role": "user", 
+            "content": message
+        })
+        
         tools = [t.schema for t in self.tools]
         response = self.client.messages.create(
             model=self.model,
-            system=system_message,
             messages=self.messages,
             max_tokens=3000,
             temperature=0.7,
@@ -334,13 +331,9 @@ class DumbConversation:
         # Handle potential tool use
         assistant_messages = []
         while response.stop_reason == "tool_use":
-            tool_result_messages  = []
+            tool_result_messages = []
             for block in response.content:
                 if block.type != "tool_use":
-                    # TODO: this could be improved. As is we're going to just concatenate the text of all the blocks.
-                    # This might not make sense to the reader since the tool calls are missing and the assistant might refer to them.
-                    # An improvement would be to have the assistant say something like "I used the following tools to answer the question: ..."
-                    # and then list the tools used and their results.
                     assistant_messages.append(block.text)
                 else:
                     tool_use = block
@@ -359,10 +352,8 @@ class DumbConversation:
                 "content": tool_result_messages,
             })
             
-            # Get final response after tool use
             response = self.client.messages.create(
                 model=self.model,
-                system=system_message,
                 messages=self.messages,
                 max_tokens=3000,
                 temperature=0.7,
@@ -372,10 +363,37 @@ class DumbConversation:
         assistant_messages.append(response.content[0].text)
         assistant_message = "\n".join(assistant_messages)
         self.messages.append({"role": "assistant", "content": assistant_message})
-        return assistant_message
+        
+        return {
+            'messages': self._process_messages(),
+            'artifacts': [],
+        }
     
     def _process_tool_call(self, tool_name, tool_input):
         for tool in self.tools:
             if tool.name == tool_name:
                 return tool.callable(**tool_input)
         raise Exception(f"Tool {tool_name} not found")
+
+    def _process_messages(self):
+        """Convert any dict-like objects in message content lists to regular dictionaries."""
+        processed_messages = []
+        
+        for message in self.messages:
+            new_message = {"role": message["role"]}
+            content = message["content"]
+            
+            if isinstance(content, list):
+                new_content = []
+                for item in content:
+                    if hasattr(item, 'dict'):
+                        new_content.append(item.dict())
+                    else:
+                        new_content.append(item)
+                new_message["content"] = new_content
+            else:
+                new_message["content"] = content
+                
+            processed_messages.append(new_message)
+            
+        return processed_messages
