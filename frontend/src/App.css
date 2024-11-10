@@ -72,6 +72,11 @@
   background-color: #0056b3;
 }
 
+.chat-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .right-panel {
   flex: 1;
   border: 1px solid #ccc;
@@ -112,4 +117,31 @@
 
 .message-text {
   margin: 4px 0;
+}
+
+.message.assistant .message-content:last-child {
+  position: relative;
+}
+
+/* Animated dots for the loading state */
+.message.assistant:last-child .message-content:last-child:has(> span:only-child) {
+  min-height: 24px;
+}
+
+.message.assistant:last-child .message-content span:only-child {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.message.assistant:last-child .message-content span:only-child::after {
+  content: "...";
+  animation: dots 1.5s steps(4, end) infinite;
+  width: 1.5em;
+}
+
+@keyframes dots {
+  0%, 20% { content: ""; }
+  40% { content: "."; }
+  60% { content: ".."; }
+  80%, 100% { content: "..."; }
 }

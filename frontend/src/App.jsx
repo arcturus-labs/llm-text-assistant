@@ -4,18 +4,13 @@ import ArtifactPanel from './components/ArtifactPanel';
 import MessageContent from './components/MessageContent';
 import SubscriptionCheck from './components/SubscriptionCheck';
 import './App.css';
-//TODO! add spinner while waiting for response
-//TODO! pull the user's email and auth status from cookies
-//- if they are authed, then run future commands
-//- if they have an email but are not authed, then prompt them make sure it's correct and make sure they've checked their email for confirmation, and once they submit, re-run the auth check
-//- if they don't have an email, then prompt them for their email and run the auth check, and return with an "auth ok" or the above dialog
-
 
 function App() {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [artifacts, setArtifacts] = useState([]);
   const subscriptionCheckRef = useRef();
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleArtifactChange = (identifier, newContent) => {
     setArtifacts(artifacts.map(artifact => 
@@ -27,15 +22,12 @@ function App() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (!inputMessage.trim()) return;
+    if (!subscriptionCheckRef.current.checkSubscription()) return;
 
-    if (!subscriptionCheckRef.current.checkSubscription()) {
-      return;
-    }
-
+    setIsLoading(true);
     const newMessages = [...messages, { role: 'user', content: inputMessage }];
-    setMessages(newMessages);
+    setMessages([...newMessages, { role: 'assistant', content: '' }]);
     setInputMessage('');
 
     try {
@@ -63,6 +55,8 @@ function App() {
     } catch (error) {
       console.error('Error:', error);
       setMessages([...newMessages, { role: 'assistant', content: 'Error: Failed to send message' }]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -86,8 +80,15 @@ function App() {
             onChange={(e) => setInputMessage(e.target.value)}
             placeholder="Type your message..."
             className="chat-input"
+            disabled={isLoading}
           />
-          <button type="submit" className="chat-submit">Send</button>
+          <button 
+            type="submit" 
+            className="chat-submit"
+            disabled={isLoading}
+          >
+            Send
+          </button>
         </form>
       </div>
       <div className="right-panel">
