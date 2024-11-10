@@ -11,6 +11,14 @@ function App() {
   const [artifacts, setArtifacts] = useState([]);
   const subscriptionCheckRef = useRef();
   const [isLoading, setIsLoading] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(true);
+
+  const suggestions = [
+    "I'm I want to put together an email for a client about the home listed at 192 Oak St. Can you pull the listing?",
+    "What are the comps for that property?",
+    "Can you pull the email template and draft a new email?",
+    "Oh, I forgot to tell you. His name is Tim Sircy and my company name is Arcturus Real Estate."
+  ];
 
   const handleArtifactChange = (identifier, newContent) => {
     setArtifacts(artifacts.map(artifact => 
@@ -60,6 +68,10 @@ function App() {
     }
   };
 
+  const handleSuggestionClick = (suggestion) => {
+    setInputMessage(suggestion);
+  };
+
   return (
     <div className="app">
       <SubscriptionCheck ref={subscriptionCheckRef} />
@@ -97,6 +109,30 @@ function App() {
           onArtifactChange={handleArtifactChange}
         />
       </div>
+      {showSuggestions && (
+        <div className="suggestions-panel">
+          <div className="suggestions-title">Suggested Messages</div>
+          <button 
+            className="close-suggestions"
+            onClick={() => setShowSuggestions(false)}
+          >
+            ×
+          </button>
+          <ul className="suggestions-list">
+            {suggestions.map((suggestion, index) => (
+              <li key={index} className="suggestion-item">
+                <button 
+                  className="suggestion-button"
+                  onClick={() => handleSuggestionClick(suggestion)}
+                >
+                  ←
+                </button>
+                <span>{suggestion}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
