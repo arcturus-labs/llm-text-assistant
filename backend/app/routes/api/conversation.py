@@ -1,5 +1,3 @@
-#TODO!
-# - make clicking on a link in chat open the artifact in the Artifact Viewer
 import re
 import os
 
@@ -152,17 +150,10 @@ class Conversation:
         )
 
         # Handle potential tool use
-        assistant_messages = []
         while response.stop_reason == "tool_use":
             tool_result_messages  = []
             for block in response.content:
-                if block.type != "tool_use":
-                    # TODO: this could be improved. As is we're going to just concatenate the text of all the blocks.
-                    # This might not make sense to the reader since the tool calls are missing and the assistant might refer to them.
-                    # An improvement would be to have the assistant say something like "I used the following tools to answer the question: ..."
-                    # and then list the tools used and their results.
-                    assistant_messages.append(block.text)
-                else:
+                if block.type == "tool_use":
                     tool_use = block
                     tool_name = tool_use.name
                     tool_input = tool_use.input
@@ -189,8 +180,7 @@ class Conversation:
                 tools=tools,
             )
         
-        assistant_messages.append(response.content[0].text)
-        assistant_message = "\n".join(assistant_messages)
+        assistant_message = response.content[0].text
         self.messages.append({"role": "assistant", "content": assistant_message})
         artifacts, messages = self._extract_messages_and_artifacts()
 

@@ -1,8 +1,6 @@
 import React, { useState, forwardRef, useImperativeHandle, useEffect } from 'react';
 import Cookies from 'js-cookie';
 import './SubscriptionCheck.css';
-// TODO! make the email for verification john@arcturus-labs.com
-// TODO! make the redirect for verification https://arcturus-labs.com/verify
 const COOKIE_PREFIX = 'subscription_';
 const COOKIE_EMAIL = `${COOKIE_PREFIX}email`;
 const COOKIE_AUTH = `${COOKIE_PREFIX}authorized`;
