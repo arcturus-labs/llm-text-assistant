@@ -3,3 +3,4 @@ gunicorn==22.0.0
 pytest==7.4.3
 anthropic==0.39.0
 python-dotenv==1.0.1
+requests==2.32.3
