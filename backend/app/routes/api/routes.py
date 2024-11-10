@@ -19,7 +19,10 @@ def chat():
     artifacts = convert_to_artifacts(data.get('artifacts', []))
     
     try:
-        conversation = Conversation(
+        # Choose conversation type based on data
+        ConversationType = DumbConversation if data.get('conversation_type') == 'dumb' else Conversation
+        
+        conversation = ConversationType(
             tools=tools,
             messages=messages,
             artifacts=artifacts,
@@ -28,7 +31,6 @@ def chat():
         messages = response['messages']
         artifacts = response['artifacts']
         
-        print("AAAAAA",messages)
         return jsonify({
             'messages': process_tool_uses_and_results(messages),
             'artifacts': [artifact.dict() for artifact in artifacts],

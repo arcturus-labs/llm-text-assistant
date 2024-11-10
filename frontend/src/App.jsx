@@ -39,6 +39,9 @@ function App() {
     setInputMessage('');
 
     try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const conversationType = urlParams.has('dumb') ? 'dumb' : 'smart';
+
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -46,7 +49,8 @@ function App() {
         },
         body: JSON.stringify({ 
           messages: newMessages,
-          artifacts: artifacts
+          artifacts: artifacts,
+          conversation_type: conversationType
         })
       });
       
