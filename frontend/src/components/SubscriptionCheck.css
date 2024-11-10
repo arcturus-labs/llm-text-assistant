@@ -12,7 +12,8 @@
 }
 
 .subscription-modal {
-  background-color: white;
+  background-color: #f8f9fa;
+  color: #212529;
   padding: 2rem;
   border-radius: 8px;
   max-width: 500px;
@@ -20,6 +21,7 @@
 }
 
 .subscription-modal h2 {
+  color: #212529;
   margin-top: 0;
   margin-bottom: 1rem;
 }
@@ -35,6 +37,8 @@
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 1rem;
+  color: #212529;
+  background-color: white;
 }
 
 .subscription-modal button {

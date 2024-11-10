@@ -27,14 +27,21 @@ const SubscriptionCheck = forwardRef((props, ref) => {
     }
   }, []);
 
-  useImperativeHandle(ref, () => ({
-    checkSubscription: () => {
-      if (!authorized) {
-        setShowModal(true);
-        return false;
-      }
+  const checkSubscription = () => {
+    // If bypass-subscription is in URL, return true without any other checks
+    if (window.location.href.includes('bypass-subscription')) {
       return true;
     }
+
+    if (!authorized) {
+      setShowModal(true);
+      return false;
+    }
+    return true;
+  };
+
+  useImperativeHandle(ref, () => ({
+    checkSubscription
   }));
 
   const handleVerification = async (e) => {
