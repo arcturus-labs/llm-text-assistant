@@ -1,5 +1,5 @@
 import React from 'react';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import ArtifactPanel from './components/ArtifactPanel';
 import MessageContent from './components/MessageContent';
 import SubscriptionCheck from './components/SubscriptionCheck';
@@ -14,9 +14,23 @@ function App() {
   const [showSuggestions, setShowSuggestions] = useState(true);
   const chatHistoryRef = useRef(null);
 
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('recorded')) {
+      // Import and use the recorded messages
+      const jsonFile = urlParams.has('dumb') ? './assets/dumb_usage.json' : './assets/smart_usage.json';
+      import(jsonFile)
+        .then(module => {
+          setMessages(module.default.messages);
+          setArtifacts(module.default.artifacts);
+        })
+        .catch(error => console.error('Error loading messages:', error));
+    }
+  }, []);
+
   const suggestions = [
     "I'm I want to put together an email for a client about the home listed at 192 Oak St. Can you pull the listing?",
-    "What are the comps for that property?",
+    //"What are the comps for that property?",
     "Can you pull the email template and draft a new email?",
     "Oh, I forgot to tell you. His name is Tim Sircy and my company name is Arcturus Real Estate."
   ];
@@ -36,6 +50,10 @@ function App() {
 
     setIsLoading(true);
     const newMessages = [...messages, { role: 'user', content: inputMessage }];
+    console.log(JSON.stringify({
+      "messages": newMessages,
+      "artifacts": artifacts
+    }));
     setMessages([...newMessages, { role: 'assistant', content: '' }]);
     setInputMessage('');
 

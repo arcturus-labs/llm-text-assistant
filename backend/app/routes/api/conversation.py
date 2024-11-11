@@ -329,13 +329,10 @@ class DumbConversation:
         )
 
         # Handle potential tool use
-        assistant_messages = []
         while response.stop_reason == "tool_use":
             tool_result_messages = []
             for block in response.content:
-                if block.type != "tool_use":
-                    assistant_messages.append(block.text)
-                else:
+                if block.type == "tool_use":
                     tool_use = block
                     tool_name = tool_use.name
                     tool_input = tool_use.input
@@ -360,8 +357,7 @@ class DumbConversation:
                 tools=tools,
             )
         
-        assistant_messages.append(response.content[0].text)
-        assistant_message = "\n".join(assistant_messages)
+        assistant_message = response.content[0].text
         self.messages.append({"role": "assistant", "content": assistant_message})
         
         return {
