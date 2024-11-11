@@ -102,8 +102,10 @@
 }
 
 .tool-header {
-  font-weight: bold;
-  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
 }
 
 .tool-args {
@@ -233,4 +235,16 @@
 .suggestion-button:hover {
   background-color: #f0f0f0;
   border-color: #999;
+}
+
+.expand-icon {
+  display: inline-block;
+  width: 16px;
+  transition: transform 0.2s ease;
+}
+
+.tool-usage-box {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin: 8px 0;
 }
