@@ -8,12 +8,19 @@ function MessageContent({ content }) {
 
   // Handle string content (regular messages)
   if (typeof content === 'string') {
-    return content.split('\n').map((line, i) => (
-      <React.Fragment key={i}>
-        <span dangerouslySetInnerHTML={createMarkup(line)} />
-        {i < content.split('\n').length - 1 && <br />}
-      </React.Fragment>
-    ));
+    return (
+      <span className="message-text">
+        {content.split('\n').map((line, i) => (
+          <React.Fragment key={i}>
+            <span 
+              style={{ display: 'inline' }} 
+              dangerouslySetInnerHTML={createMarkup(line)} 
+            />
+            {i < content.split('\n').length - 1 && <br />}
+          </React.Fragment>
+        ))}
+      </span>
+    );
   }
 
   // Handle array content (tool usage messages)
@@ -54,6 +61,11 @@ function MessageContent({ content }) {
       
       return null;
     });
+  }
+
+  // When rendering loading state
+  if (content === '') {
+    return <span className="loading-dots">&nbsp;</span>;
   }
 
   return null;

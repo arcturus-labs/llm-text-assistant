@@ -127,16 +127,19 @@
 }
 
 /* Animated dots for the loading state */
-.message.assistant:last-child .message-content:last-child:has(> span:only-child) {
+.message.assistant:last-child .message-content:last-child:has(> span:only-child:empty),
+.message.assistant:last-child .message-content:last-child:has(> span.loading-dots) {
   min-height: 24px;
 }
 
-.message.assistant:last-child .message-content span:only-child {
+.message.assistant:last-child .message-content span:only-child:empty,
+.message.assistant:last-child .message-content span.loading-dots {
   display: inline-flex;
   gap: 4px;
 }
 
-.message.assistant:last-child .message-content span:only-child::after {
+.message.assistant:last-child .message-content span:only-child:empty::after,
+.message.assistant:last-child .message-content span.loading-dots::after {
   content: "...";
   animation: dots 1.5s steps(4, end) infinite;
   width: 1.5em;
