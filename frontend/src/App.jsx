@@ -12,6 +12,7 @@ function App() {
   const subscriptionCheckRef = useRef();
   const [isLoading, setIsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(true);
+  const chatHistoryRef = useRef(null);
 
   const suggestions = [
     "I'm I want to put together an email for a client about the home listed at 192 Oak St. Can you pull the listing?",
@@ -61,6 +62,7 @@ function App() {
         if (result.artifacts) {
           setArtifacts(result.artifacts);
         }
+        setTimeout(scrollToBottom, 100);
       } else {
         setMessages([...newMessages, { role: 'assistant', content: 'Error: Failed to get response' }]);
       }
@@ -76,11 +78,20 @@ function App() {
     setInputMessage(suggestion);
   };
 
+  const scrollToBottom = () => {
+    if (chatHistoryRef.current) {
+      chatHistoryRef.current.scrollTo({
+        top: chatHistoryRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   return (
     <div className="app">
       <SubscriptionCheck ref={subscriptionCheckRef} />
       <div className="chat-container">
-        <div className="chat-history">
+        <div className="chat-history" ref={chatHistoryRef}>
           {messages.map((message, index) => (
             <div key={index} className={`message ${message.role}`}>
               <div className="message-content">
