@@ -26,6 +26,9 @@ function App() {
         })
         .catch(error => console.error('Error loading messages:', error));
     }
+    if (urlParams.has('noSuggestions')) {
+      setShowSuggestions(false);
+    }
   }, []);
 
   const suggestions = [
