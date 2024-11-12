@@ -1,9 +1,9 @@
-# fly.toml app configuration file generated for stateful-objects-of-discourse on 2024-11-07T16:30:31-06:00
+# fly.toml app configuration file generated for arcturus-artifact-aware-assistant on 2024-11-12T14:39:40-06:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'stateful-objects-of-discourse'
+app = 'arcturus-artifact-aware-assistant'
 primary_region = 'ord'
 
 [build]
