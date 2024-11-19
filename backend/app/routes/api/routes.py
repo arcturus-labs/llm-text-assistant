@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from .conversation import Conversation, DumbConversation, Artifact
-from .example_tools import tools
+from .tools import tools
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
