@@ -1,5 +1,5 @@
-from typing import Union, List
-from dataclasses import dataclass
+import re
+from typing import Union, List, Dict
 
 from markdown_it import MarkdownIt
 
@@ -43,14 +43,14 @@ ContentItem = Union[str, 'MarkdownNode']
 # Maximum characters allowed per markdown section - note that average GPT token size is 4 characters
 SECTION_CHAR_LIMIT = 100
 
-
-@dataclass
 class MarkdownNode:
-    id: ID
-    level: int
-    heading: str | None
-    content: List[ContentItem]
-    expanded: bool = False
+    def __init__(self, level: int, heading: str | None, content: List[ContentItem], expanded: bool = False):
+        self.id = IDs.generate_id()
+        self.level = level
+        self.heading = heading
+        self.content = content
+        self.expanded = expanded
+        self.nodes: Dict[ID, 'MarkdownNode'] = {}
 
     @classmethod
     def from_markdown(cls, text: str) -> 'MarkdownNode':
@@ -58,8 +58,11 @@ class MarkdownNode:
         tokens = md.parse(text)
         
         # Root node contains everything
-        root = MarkdownNode(id=IDs.generate_id(), level=0, heading=None, content=[])
+        root = MarkdownNode(level=0, heading=None, content=[])
         stack = [root]
+        
+        # Keep track of all nodes created
+        all_nodes = {root.id: root}
         
         # Buffer to accumulate text between headers
         text_buffer = []
@@ -88,9 +91,12 @@ class MarkdownNode:
                     stack.pop()
                 
                 # Create new node and add it to parent's content
-                new_node = MarkdownNode(id=IDs.generate_id(), level=level, heading=heading_text, content=[])
+                new_node = MarkdownNode(level=level, heading=heading_text, content=[])
                 stack[-1].content.append(new_node)
                 stack.append(new_node)
+                
+                # Add to collection of all nodes
+                all_nodes[new_node.id] = new_node
                 
                 # Skip the heading content and closing tokens
                 i += 2
@@ -110,28 +116,35 @@ class MarkdownNode:
         # Flush any remaining text
         flush_buffer()
 
-        root.expanded = True
+        # Set expanded and populate nodes dict on root only
+        # root.expanded = True # TODO: consider making this True again
+        root.nodes = all_nodes
         
         return root
 
-    def to_string(self, parent_expanded: bool = True) -> str:
+    def to_string(self, parent_expanded: bool | None = None) -> str:
+        root = False
+        if parent_expanded is None:
+            parent_expanded = True
+            root = True
+
         parts = []
         
         # Show heading for all cases
         if self.heading:
-            parts.append('#' * self.level + ' ' + self.heading + '\n\n')
+            parts.append('#' * self.level + ' ' + self.heading)
     
-        if not parent_expanded:
-            if self.expanded:
-                raise ValueError("Invalid state: Node cannot be expanded when parent is collapsed")
-            else:
-                # Just show expand comment after heading
-                parts.append(f"<!-- expand with expand_section({self.id}) -->\n\n")
-                return ''.join(parts)
+        if not parent_expanded and not self.expanded:
+            # Just show expand comment after heading
+            parts.append(f'... <!-- Section collapsed - expand with expand_section("{self.id}") -->\n\n')
+            return ''.join(parts)    
     
         if self.expanded:
             # Show collapse comment
-            parts.append(f"<!-- collapse with collapse_section({self.id}) -->\n\n")
+            if root:
+                parts.append(f' <!-- Collapse this document with collapse_section("{self.id}") -->\n\n')
+            else:
+                parts.append(f' <!-- Section expanded - collapse with collapse_section("{self.id}") -->\n\n')
             
             # Show full first text section and recurse to children
             text_parts = []
@@ -142,20 +155,59 @@ class MarkdownNode:
                     text_parts.append(item.to_string(parent_expanded=True))
             parts.extend(text_parts)
         else:
+            if root:
+                parts.append(f' <!-- Document summarized - expand with expand_section("{self.id}") -->\n\n')
+            else:
+                parts.append(f' <!-- Section collapsed - expand with expand_section("{self.id}") -->\n\n')
             # Show truncated first text and recurse to children as collapsed
             text_parts = []
-            for item in self.content:
+            for i, item in enumerate(self.content):
                 if isinstance(item, str):
                     if len(item) > SECTION_CHAR_LIMIT:
-                        text_parts.append(item[:SECTION_CHAR_LIMIT])
-                        text_parts.append(f"...\n\n<!-- truncated - run expand_section({self.id}) to see more -->\n\n")
-                        break
-                    text_parts.append(item)
+                        # Find first word boundary after limit
+                        matches = re.finditer(r'\b', item[SECTION_CHAR_LIMIT:])
+                        match = next(matches, None)  # Skip first match
+                        match = next(matches, None)  # Get second match
+                        print(item[SECTION_CHAR_LIMIT:], match, match.start() if match else None)
+                        split_pos = SECTION_CHAR_LIMIT + (match.start() if match else 0)
+                        text_parts.append(item[:split_pos])
+                    else:
+                        text_parts.append(item)
                 else:  # MarkdownNode
                     text_parts.append(item.to_string(parent_expanded=False))
+                if i == 0:
+                    # special case, if there is no text, we still need to show the expand comment
+                    text_parts.append(f"...\n\n")                    
             parts.extend(text_parts)
     
         return ''.join(parts)
+
+    def expand_section(self, id: ID | None = None):
+        """Expands this section by setting expanded to True"""
+        if id is None or self.id == id:
+            self.expanded = True
+        elif self.nodes:
+            if id in self.nodes:
+                self.nodes[id].expand_section()
+            else:
+                raise ValueError(f"Node with id {id} not found")
+        else:
+            raise ValueError(f"Only the root node has a nodes dictionary")
+
+    def collapse_section(self, id: ID | None = None):
+        """Collapses this section and all child sections recursively"""
+        if id is None or self.id == id:
+            self.expanded = False
+            for item in self.content:
+                if isinstance(item, MarkdownNode):
+                    item.collapse_section() 
+        elif self.nodes:
+            if id in self.nodes:
+                self.nodes[id].collapse_section()
+            else:
+                raise ValueError(f"Node with id {id} not found")
+        else:
+            raise ValueError(f"Only the root node has a nodes dictionary")
 
 
 tools = []
