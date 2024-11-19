@@ -269,6 +269,30 @@ class MarkdownNode:
 
 ################
 
+class MarkdownArtifact(Artifact):
+    def __init__(self, identifier, type, title, markdown: str|MarkdownNode):
+        if isinstance(markdown, str):
+            markdownNode = MarkdownNode.from_markdown(markdown)
+        else:
+            markdownNode = markdown
+        super().__init__(identifier, type, title, markdownNode.to_string())
+        self.root = markdownNode
+
+    def dict(self):
+        return {
+            'identifier': self.identifier,
+            'type': self.type,
+            'title': self.title,
+            'content': self.root.to_string(),
+            'root': self.root.to_dict(),
+        }
+    
+    def collapse_section(self, id: ID):
+        self.root.collapse_section(id)
+
+    def expand_section(self, id: ID):
+        self.root.expand_section(id)
+        
 collapse_section_schema = {
     "name": "collapse_section",
     "description": "Collapse a section of the markdown document to save memory and hide irrelevant content.\n\n"
@@ -313,7 +337,7 @@ expand_section_schema = {
 
 
 def set_up_tools(markdown_text: str):
-    root = MarkdownNode.from_markdown(markdown_text)
+    root = MarkdownArtifact(identifier='root_llm_txt', type='markdown', title='llm.txt', markdown=markdown_text)
     tools = [
         Tool(collapse_section_schema, root.collapse_section),
         Tool(expand_section_schema, root.expand_section),
@@ -322,4 +346,3 @@ def set_up_tools(markdown_text: str):
 
 
 tools = []
-
