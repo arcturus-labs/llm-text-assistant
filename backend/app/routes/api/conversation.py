@@ -54,7 +54,7 @@ If the answer is particularly complex, then you can prepare a markdown artifact 
 Artifacts are self-contained pieces of content that can be referenced in the conversation. The assistant can generate artifacts during the course of the conversation upon request of the user. Artifacts have the following format:
 
 ```
-<artifact identifier="acG9fb4a" type="mime_type" title="title">
+<artifact identifier="acG9fb4a" type="text" title="title">
 ...actual content of the artifact...
 </artifact>
 ```
@@ -68,14 +68,15 @@ Artifacts are self-contained pieces of content that can be referenced in the con
 - The assistant can create artifacts on behalf of the user, but only if the user asks for it.
   - The assistant will specify the information below:
     - identifiers: Must be unique 8 character hex strings. Examples: 18bacG4a, 3baf9f83, 98acb34d
-    - types: MIME types. Examples: text/markdown, text/plain, application/json, image/svg+xml
+    - types: one of these exact strings: markdown, text, json, image, code
+      - it is important that the type is exactly as specified above, because the frontend uses this to determine how to render the artifact - for instance a document of "type=markdown" will be rendered as markdown, while a document of "type=text" will be rendered as plain text.
     - titles: Must be short, descriptive, and unique. Examples: "Simple Python factorial script", "Blue circle SVG", "Metrics dashboard React component"
     - content: The actual content of the artifact and must conform to the artifact's type and correspond to the title.
   - To create an artifact, the assistant should simply write the content in the format specified above. The content will not be visible to the user in chat, but instead will be visible in the Artifact Viewer. After creating an artifact, they can refer to it in the conversation using an anchor tag as described above. Example:
     ```
     HUMAN: Create a simple Python int sort function.
     ASSISTANT: I will create a simple Python merge sort function.
-    <artifact identifier="18bacG4a" type="text/markdown" title="Simple Python int sort function">
+    <artifact identifier="18bacG4a" type="code" title="Simple Python int sort function">
     def sort_ints(ints):
         if len(ints) <= 1:
             return ints
@@ -108,7 +109,7 @@ Artifacts are self-contained pieces of content that can be referenced in the con
   - When editing the artifact, you must completely reproduce the full artifact block, including the identifier, type, and title. Example:
     ```
     HUMAN: Make that sorting function sort in descending order.
-    ASSISTANT: <artifact identifier="18bacG4a" type="text/markdown" title="Simple Python int sort function (descending)">
+    ASSISTANT: <artifact identifier="18bacG4a" type="code" title="Simple Python int sort function (descending)">
     def sort_ints(ints):
         if len(ints) <= 1:
             return ints
