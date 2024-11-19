@@ -73,6 +73,8 @@ function App() {
   const [showSuggestions, setShowSuggestions] = useState(true);
   const chatHistoryRef = useRef(null);
   const [selectedLlm, setSelectedLlm] = useState('');
+  const [showLlmModal, setShowLlmModal] = useState(false);
+  const [isLlmLoading, setIsLlmLoading] = useState(false);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -82,9 +84,10 @@ function App() {
       setMessages(history.messages);
       setArtifacts(history.artifacts);
     }
-    if (urlParams.has('noSuggestions')) {
+    if (urlParams.has('noSuggestions')) {//TODO! update
       setShowSuggestions(false);
     }
+    setShowLlmModal(true);
   }, []);
 
   const suggestions = [//TODO! change these to be more useful
@@ -164,9 +167,8 @@ function App() {
     }
   };
 
-  const handleLlmSubmit = async () => {
-    if (!selectedLlm) return;
-    
+  const handleLlmSelect = async (llmName) => {
+    setIsLlmLoading(true);
     try {
       const response = await fetch('/api/choose_llm_txt', {
         method: 'POST',
@@ -174,40 +176,47 @@ function App() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          name: selectedLlm,
-          url: llm_text_urls[selectedLlm]
+          name: llmName,
+          url: llm_text_urls[llmName]
         })
       });
       
       const artifact = await response.json();
       if (artifact) {
         setArtifacts([...artifacts, artifact]);
+        setShowLlmModal(false);
       }
     } catch (error) {
       console.error('Error:', error);
+    } finally {
+      setIsLlmLoading(false);
     }
   };
 
   return (
     <div className="app">
+      {showLlmModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h2>Select LLM.txt</h2>
+            <select 
+              className="llm-dropdown"
+              onChange={(e) => handleLlmSelect(e.target.value)}
+              disabled={isLlmLoading}
+              value={selectedLlm}
+            >
+              <option value="">Select an LLM...</option>
+              {Object.keys(llm_text_urls).map(key => (
+                <option key={key} value={key}>
+                  {key}
+                </option>
+              ))}
+            </select>
+            {isLlmLoading && <div className="spinner"></div>}
+          </div>
+        </div>
+      )}
       <SubscriptionCheck ref={subscriptionCheckRef} />
-      <div className="llm-selector">
-        <select 
-          value={selectedLlm}
-          onChange={(e) => setSelectedLlm(e.target.value)}
-        >
-          <option value="">Select LLM.txt</option>
-          {Object.keys(llm_text_urls).map(key => (
-            <option key={key} value={key}>{key}</option>
-          ))}
-        </select>
-        <button 
-          onClick={handleLlmSubmit}
-          disabled={!selectedLlm}
-        >
-          Load LLM.txt
-        </button>
-      </div>
       <div className="chat-container">
         <div className="chat-history" ref={chatHistoryRef}>
           {messages.map((message, index) => (

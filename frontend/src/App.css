@@ -249,30 +249,90 @@
   margin: 8px 0;
 }
 
-.llm-selector {
-  position: absolute;
-  top: 10px;
-  right: 10px;
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
-  gap: 10px;
-  z-index: 100;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
 }
 
-.llm-selector select {
-  padding: 5px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  min-width: 300px;
+  text-align: center;
 }
 
-.llm-selector button {
-  padding: 5px 10px;
-  border-radius: 4px;
+.llm-dropdown {
+  width: 100%;
+  padding: 10px;
+  margin: 20px 0;
   border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
   background: white;
   cursor: pointer;
 }
 
-.llm-selector button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.llm-dropdown:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.spinner {
+  margin: 10px auto;
+  width: 24px;
+  height: 24px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.llm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.llm-option {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.2s ease;
+}
+
+.llm-option:hover:not(:disabled) {
+  background: #f0f0f0;
+  border-color: #999;
+}
+
+.llm-option:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+/* Remove the old llm-selector styles */
+.llm-selector {
+  display: none;
 }
