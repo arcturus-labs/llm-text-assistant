@@ -1,3 +1,4 @@
+import json
 import re
 from typing import Union, List, Dict
 
@@ -208,6 +209,116 @@ class MarkdownNode:
                 raise ValueError(f"Node with id {id} not found")
         else:
             raise ValueError(f"Only the root node has a nodes dictionary")
+
+    def to_dict(self) -> dict:
+        """Convert the node to a dictionary representation."""
+        return {
+            'id': str(self.id),
+            'level': self.level,
+            'heading': self.heading,
+            'content': [
+                item.to_dict() if isinstance(item, MarkdownNode) else item 
+                for item in self.content
+            ],
+            'expanded': self.expanded,
+        }
+
+    def to_json(self) -> str:
+        """Convert the node to a JSON string."""
+        return json.dumps(self.to_dict())
+
+    @classmethod
+    def from_dict(cls, data: dict, parent_nodes: Dict[ID, 'MarkdownNode'] | None = None) -> 'MarkdownNode':
+        """Create a MarkdownNode from a dictionary representation."""
+        root = False
+        if parent_nodes is None:
+            root = True
+            parent_nodes = {}
+
+        # Process content items - recursively create MarkdownNodes for nested items
+        content = []
+        for item in data['content']:
+            if isinstance(item, dict):
+                node = cls.from_dict(item, parent_nodes)
+                content.append(node)
+            else:
+                content.append(item)
+
+        # Create new node
+        node = cls(
+            level=data['level'],
+            heading=data['heading'],
+            content=content,
+            expanded=data['expanded']
+        )
+        node.id = IDs.str_to_id(data['id'])  # Restore the original ID
+        parent_nodes[node.id] = node
+        
+        # If this is the root node (first call), initialize and populate nodes dict
+        if root:
+            node.nodes = parent_nodes
+        else:
+            node.nodes = None
+
+        return node
+    
+    @classmethod
+    def from_json(cls, json_str: str) -> 'MarkdownNode':
+        """Create a MarkdownNode from a JSON string."""
+        return cls.from_dict(json.loads(json_str))
+
+################
+
+collapse_section_schema = {
+    "name": "collapse_section",
+    "description": "Collapse a section of the markdown document to save memory and hide irrelevant content.\n\n"
+                  "- You should collapse sections that are confirmed to be irrelevant to the current topic\n"
+                  "- Collapse highest-level sections first when possible to maximize memory savings\n"
+                  "- When a parent section is collapsed, all subsections are automatically hidden\n"
+                  "- Multiple sections can be collapsed in parallel\n"
+                  "- collapse_section can also be used in parallel with expand_section",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "section_id": {
+                "type": "string",
+                "description": "8-digit hexadecimal ID of the section to collapse (e.g. '04c8214b')",
+                "pattern": "^[0-9a-f]{8}$"
+            }
+        },
+        "required": ["section_id"]
+    }
+}
+
+expand_section_schema = {
+    "name": "expand_section", 
+    "description": "Expand a section of the markdown document to reveal its contents.\n\n"
+                  "- Expand the most specific (lowest-level) relevant section first\n"
+                  "- Multiple sections can be expanded in parallel\n"
+                  "- You can expand any section regardless of parent section state (e.g. parent sections do not need to be expanded to view subsection content)\n"
+                  "- If expansion causes a MemoryOverflow error, try expanding smaller subsections instead\n"
+                  "- expand_section can also be used in parallel with collapse_section",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "section_id": {
+                "type": "string",
+                "description": "8-digit hexadecimal ID of the section to expand (e.g. '04c8214b')",
+                "pattern": "^[0-9a-f]{8}$"
+            }
+        },
+        "required": ["section_id"]
+    }
+}
+
+
+def set_up_tools(markdown_text: str):
+    root = MarkdownNode.from_markdown(markdown_text)
+    tools = [
+        Tool(collapse_section_schema, root.collapse_section),
+        Tool(expand_section_schema, root.expand_section),
+    ]
+    return root, tools
 
 
 tools = []
