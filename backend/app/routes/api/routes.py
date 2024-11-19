@@ -1,7 +1,7 @@
 import json
 from flask import Blueprint, request, jsonify
 from .conversation import Conversation, Artifact
-from .tools import MarkdownArtifact, tools
+from .tools import MarkdownArtifact, set_up_tools
 import requests
 import uuid
 
@@ -22,6 +22,10 @@ def chat():
     messages = unprocess_tool_uses_and_results(messages)
     artifacts = convert_to_artifacts(data.get('artifacts', []))
     
+    markdown_artifact = artifacts[0] if artifacts else None
+    assert markdown_artifact is not None, "No markdown artifact provided"
+    assert isinstance(markdown_artifact, MarkdownArtifact), "Markdown artifact is not a MarkdownArtifact"
+    tools = set_up_tools(markdown_artifact)
     try:
         conversation = Conversation(
             tools=tools,
@@ -169,11 +173,17 @@ def choose_llm_txt():
         return json.dumps(artifact.dict())
         
     except requests.RequestException as e:
+        print(f"Error in chat endpoint: {str(e)}", flush=True)
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'error': f'Failed to fetch LLM.txt: {str(e)}',
             'status': 'error'
         }), 500
     except Exception as e:
+        print(f"Error in chat endpoint: {str(e)}", flush=True)
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'error': str(e),
             'status': 'error'

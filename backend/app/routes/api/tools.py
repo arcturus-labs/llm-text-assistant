@@ -46,7 +46,7 @@ SECTION_CHAR_LIMIT = 100
 
 class MarkdownNode:
     def __init__(self, level: int, heading: str | None, content: List[ContentItem], expanded: bool = False):
-        self.id = IDs.generate_id()
+        self.section_id = IDs.generate_id()
         self.level = level
         self.heading = heading
         self.content = content
@@ -63,7 +63,7 @@ class MarkdownNode:
         stack = [root]
         
         # Keep track of all nodes created
-        all_nodes = {root.id: root}
+        all_nodes = {root.section_id: root}
         
         # Buffer to accumulate text between headers
         text_buffer = []
@@ -97,7 +97,7 @@ class MarkdownNode:
                 stack.append(new_node)
                 
                 # Add to collection of all nodes
-                all_nodes[new_node.id] = new_node
+                all_nodes[new_node.section_id] = new_node
                 
                 # Skip the heading content and closing tokens
                 i += 2
@@ -137,15 +137,15 @@ class MarkdownNode:
     
         if not parent_expanded and not self.expanded:
             # Just show expand comment after heading
-            parts.append(f'... <!-- Section collapsed - expand with expand_section("{self.id}") -->\n\n')
+            parts.append(f'... <!-- Section collapsed - expand with expand_section("{self.section_id}") -->\n\n')
             return ''.join(parts)    
     
         if self.expanded:
             # Show collapse comment
             if root:
-                parts.append(f' <!-- Collapse this document with collapse_section("{self.id}") -->\n\n')
+                parts.append(f' <!-- Collapse this document with collapse_section("{self.section_id}") -->\n\n')
             else:
-                parts.append(f' <!-- Section expanded - collapse with collapse_section("{self.id}") -->\n\n')
+                parts.append(f' <!-- Section expanded - collapse with collapse_section("{self.section_id}") -->\n\n')
             
             # Show full first text section and recurse to children
             text_parts = []
@@ -157,9 +157,9 @@ class MarkdownNode:
             parts.extend(text_parts)
         else:
             if root:
-                parts.append(f' <!-- Document summarized - expand with expand_section("{self.id}") -->\n\n')
+                parts.append(f' <!-- Document summarized - expand with expand_section("{self.section_id}") -->\n\n')
             else:
-                parts.append(f' <!-- Section collapsed - expand with expand_section("{self.id}") -->\n\n')
+                parts.append(f' <!-- Section collapsed - expand with expand_section("{self.section_id}") -->\n\n')
             # Show truncated first text and recurse to children as collapsed
             text_parts = []
             for i, item in enumerate(self.content):
@@ -183,37 +183,37 @@ class MarkdownNode:
     
         return ''.join(parts)
 
-    def expand_section(self, id: ID | None = None):
+    def expand_section(self, section_id: ID | None = None):
         """Expands this section by setting expanded to True"""
-        if id is None or self.id == id:
+        if section_id is None or self.section_id == section_id:
             self.expanded = True
         elif self.nodes:
-            if id in self.nodes:
-                self.nodes[id].expand_section()
+            if section_id in self.nodes:
+                self.nodes[section_id].expand_section()
             else:
-                raise ValueError(f"Node with id {id} not found")
+                raise ValueError(f"Node with section_id={section_id} not found")
         else:
             raise ValueError(f"Only the root node has a nodes dictionary")
 
-    def collapse_section(self, id: ID | None = None):
+    def collapse_section(self, section_id: ID | None = None):
         """Collapses this section and all child sections recursively"""
-        if id is None or self.id == id:
+        if section_id is None or self.section_id == section_id:
             self.expanded = False
             for item in self.content:
                 if isinstance(item, MarkdownNode):
                     item.collapse_section() 
         elif self.nodes:
-            if id in self.nodes:
-                self.nodes[id].collapse_section()
+            if section_id in self.nodes:
+                self.nodes[section_id].collapse_section()
             else:
-                raise ValueError(f"Node with id {id} not found")
+                raise ValueError(f"Node with section_id={section_id} not found")
         else:
             raise ValueError(f"Only the root node has a nodes dictionary")
 
     def to_dict(self) -> dict:
         """Convert the node to a dictionary representation."""
         return {
-            'id': str(self.id),
+            'section_id': str(self.section_id),
             'level': self.level,
             'heading': self.heading,
             'content': [
@@ -251,8 +251,8 @@ class MarkdownNode:
             content=content,
             expanded=data['expanded']
         )
-        node.id = IDs.str_to_id(data['id'])  # Restore the original ID
-        parent_nodes[node.id] = node
+        node.section_id = IDs.str_to_id(data['section_id'])  # Restore the original ID
+        parent_nodes[node.section_id] = node
         
         # If this is the root node (first call), initialize and populate nodes dict
         if root:
@@ -270,12 +270,12 @@ class MarkdownNode:
 ################
 
 class MarkdownArtifact(Artifact):
-    def __init__(self, identifier, title, markdown: str|dict):
+    def __init__(self, identifier, title, markdown: str|dict):# Move url processing to here instead of API
         markdownNode = None
         if isinstance(markdown, str):
             markdownNode = MarkdownNode.from_markdown(markdown)
         else:
-            markdownNode = MarkdownNode.from_dict(markdown)
+            markdownNode = MarkdownNode.from_dict(markdown['root'])
         super().__init__(identifier, 'markdown', title, markdownNode.to_string())
         self.root = markdownNode
 
@@ -288,13 +288,15 @@ class MarkdownArtifact(Artifact):
             'root': self.root.to_dict(),
         }
     
-    def collapse_section(self, id: ID):
-        self.root.collapse_section(id)
-        return f"Section {id} collapsed. Artifact {self.identifier} above reflects this change."
+    def collapse_section(self, section_id: str):
+        section_id = IDs.str_to_id(section_id)
+        self.root.collapse_section(section_id)
+        return f"Section {section_id} \"{self.root.nodes[section_id].heading}\" collapsed. Artifact {self.title} (id={self.identifier}) currently reflects this change."
 
-    def expand_section(self, id: ID):
-        self.root.expand_section(id)
-        return f"Section {id} expanded. Artifact {self.identifier} above reflects this change."
+    def expand_section(self, section_id: str):
+        section_id = IDs.str_to_id(section_id)
+        self.root.expand_section(section_id)
+        return f"Section {section_id} \"{self.root.nodes[section_id].heading}\" expanded. Artifact {self.title} (id={self.identifier}) currently reflects this change."
     
     
 collapse_section_schema = {
@@ -340,13 +342,9 @@ expand_section_schema = {
 }
 
 
-def set_up_tools(markdown_text: str):
-    root = MarkdownArtifact(identifier='root_llm_txt', type='markdown', title='llm.txt', markdown=markdown_text)
+def set_up_tools(markdown_artifact: MarkdownArtifact):
     tools = [
-        Tool(collapse_section_schema, root.collapse_section),
-        Tool(expand_section_schema, root.expand_section),
+        Tool(collapse_section_schema, markdown_artifact.collapse_section),
+        Tool(expand_section_schema, markdown_artifact.expand_section),
     ]
-    return root, tools
-
-
-tools = []
+    return tools

@@ -174,13 +174,14 @@ function App() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
+          name: selectedLlm,
           url: llm_text_urls[selectedLlm]
         })
       });
       
-      const result = await response.json();
-      if (result.artifact) {
-        setArtifacts([...artifacts, result.artifact]);
+      const artifact = await response.json();
+      if (artifact) {
+        setArtifacts([...artifacts, artifact]);
       }
     } catch (error) {
       console.error('Error:', error);

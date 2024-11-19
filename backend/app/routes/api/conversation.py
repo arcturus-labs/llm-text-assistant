@@ -31,6 +31,8 @@ class Tool:
         self.callable = callable
         self.name = schema["name"]
 
+#TODO! update this to make it llm.txt specific and to describe the markdown stuff
+#TODO! write specific sections as a markdown document (name sections and quote within sections - don't use section ids b/c people can't see them)
 SYSTEM_MESSAGE = f"""\
 You are a helpful assistant.
 
@@ -145,7 +147,7 @@ class Conversation:
             messages=self.messages,
             max_tokens=3000,
             temperature=0.7,
-            tools=tools,
+            tools=tools,#TODO! make sure to add tools!
         )
 
         # Handle potential tool use
@@ -182,7 +184,7 @@ class Conversation:
         assistant_message = response.content[0].text
         self.messages.append({"role": "assistant", "content": assistant_message})
         artifacts, messages = self._extract_messages_and_artifacts()
-
+        
         return {
             'messages': messages,
             'artifacts': artifacts,
@@ -191,7 +193,10 @@ class Conversation:
     def _process_tool_call(self, tool_name, tool_input):
         for tool in self.tools:
             if tool.name == tool_name:
-                return tool.callable(**tool_input)
+                try:
+                    return tool.callable(**tool_input)
+                except Exception as e:
+                    return f"Error calling tool {tool_name}: {str(e)}"
         raise Exception(f"Tool {tool_name} not found")
     
     def _generate_system_message(self, artifacts):
