@@ -270,12 +270,13 @@ class MarkdownNode:
 ################
 
 class MarkdownArtifact(Artifact):
-    def __init__(self, identifier, type, title, markdown: str|MarkdownNode):
+    def __init__(self, identifier, title, markdown: str|dict):
+        markdownNode = None
         if isinstance(markdown, str):
             markdownNode = MarkdownNode.from_markdown(markdown)
         else:
-            markdownNode = markdown
-        super().__init__(identifier, type, title, markdownNode.to_string())
+            markdownNode = MarkdownNode.from_dict(markdown)
+        super().__init__(identifier, 'markdown', title, markdownNode.to_string())
         self.root = markdownNode
 
     def dict(self):
@@ -289,10 +290,13 @@ class MarkdownArtifact(Artifact):
     
     def collapse_section(self, id: ID):
         self.root.collapse_section(id)
+        return f"Section {id} collapsed. Artifact {self.identifier} above reflects this change."
 
     def expand_section(self, id: ID):
         self.root.expand_section(id)
-        
+        return f"Section {id} expanded. Artifact {self.identifier} above reflects this change."
+    
+    
 collapse_section_schema = {
     "name": "collapse_section",
     "description": "Collapse a section of the markdown document to save memory and hide irrelevant content.\n\n"

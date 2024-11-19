@@ -132,7 +132,6 @@ class Conversation:
         self.tools = tools or []
         
     def say(self, message):
-        system_message = self._generate_system_message(self.artifacts)
         tools = [t.schema for t in self.tools]
         
         self.messages.append({
@@ -142,7 +141,7 @@ class Conversation:
 
         response = self.client.messages.create(
             model=self.model,
-            system=system_message,
+            system=self._generate_system_message(self.artifacts),
             messages=self.messages,
             max_tokens=3000,
             temperature=0.7,
@@ -173,7 +172,7 @@ class Conversation:
             # Get final response after tool use
             response = self.client.messages.create(
                 model=self.model,
-                system=system_message,
+                system=self._generate_system_message(self.artifacts),
                 messages=self.messages,
                 max_tokens=3000,
                 temperature=0.7,
@@ -303,93 +302,3 @@ class Conversation:
         new_content += text[last_end:]
         
         return new_content, artifacts
-
-
-class DumbConversation:
-    def __init__(self, tools=None, messages=None, artifacts=None):
-        self.client = anthropic.Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
-        self.model = "claude-3-5-sonnet-20241022"
-        self.messages = messages or []
-        self.artifacts = []  # DumbConversation doesn't support artifacts
-        self.tools = tools or []
-        
-    def say(self, message):
-        self.messages.append({
-            "role": "user", 
-            "content": message
-        })
-        
-        tools = [t.schema for t in self.tools]
-        response = self.client.messages.create(
-            model=self.model,
-            messages=self.messages,
-            max_tokens=3000,
-            temperature=0.7,
-            tools=tools,
-        )
-
-        # Handle potential tool use
-        while response.stop_reason == "tool_use":
-            tool_result_messages = []
-            for block in response.content:
-                if block.type == "tool_use":
-                    tool_use = block
-                    tool_name = tool_use.name
-                    tool_input = tool_use.input
-                    tool_result = self._process_tool_call(tool_name, tool_input)
-                    tool_result_messages.append({
-                        "type": "tool_result",
-                        "tool_use_id": tool_use.id,
-                        "content": tool_result,
-                    })
-            
-            self.messages.append({"role": "assistant", "content": response.content})
-            self.messages.append({
-                "role": "user",
-                "content": tool_result_messages,
-            })
-            
-            response = self.client.messages.create(
-                model=self.model,
-                messages=self.messages,
-                max_tokens=3000,
-                temperature=0.7,
-                tools=tools,
-            )
-        
-        assistant_message = response.content[0].text
-        self.messages.append({"role": "assistant", "content": assistant_message})
-        
-        return {
-            'messages': self._process_messages(),
-            'artifacts': [],
-        }
-    
-    def _process_tool_call(self, tool_name, tool_input):
-        for tool in self.tools:
-            if tool.name == tool_name:
-                return tool.callable(**tool_input)
-        raise Exception(f"Tool {tool_name} not found")
-
-    def _process_messages(self):
-        """Convert any dict-like objects in message content lists to regular dictionaries."""
-        processed_messages = []
-        
-        for message in self.messages:
-            new_message = {"role": message["role"]}
-            content = message["content"]
-            
-            if isinstance(content, list):
-                new_content = []
-                for item in content:
-                    if hasattr(item, 'dict'):
-                        new_content.append(item.dict())
-                    else:
-                        new_content.append(item)
-                new_message["content"] = new_content
-            else:
-                new_message["content"] = content
-                
-            processed_messages.append(new_message)
-            
-        return processed_messages

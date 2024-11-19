@@ -1,6 +1,9 @@
+import json
 from flask import Blueprint, request, jsonify
-from .conversation import Conversation, DumbConversation, Artifact
-from .tools import tools
+from .conversation import Conversation, Artifact
+from .tools import MarkdownArtifact, tools
+import requests
+import uuid
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -8,6 +11,7 @@ api_bp = Blueprint('api', __name__, url_prefix='/api')
 def echo():
     data = request.get_json()
     return jsonify(data.upper())
+
 
 @api_bp.route('/chat', methods=['POST'])
 def chat():
@@ -19,10 +23,7 @@ def chat():
     artifacts = convert_to_artifacts(data.get('artifacts', []))
     
     try:
-        # Choose conversation type based on data
-        ConversationType = DumbConversation if data.get('conversation_type') == 'dumb' else Conversation
-        
-        conversation = ConversationType(
+        conversation = Conversation(
             tools=tools,
             messages=messages,
             artifacts=artifacts,
@@ -134,5 +135,47 @@ def unprocess_tool_uses_and_results(messages):
     
     return unprocessed_messages
 
+
 def convert_to_artifacts(artifacts):
-    return [Artifact(**artifact) for artifact in artifacts]
+    artifact_list = []
+    for artifact in artifacts:
+        if 'root' in artifact:
+            artifact_list.append(MarkdownArtifact(identifier=artifact['identifier'], title=artifact['title'], markdown=artifact))
+        else:
+            artifact_list.append(Artifact(**artifact))
+    return artifact_list
+
+@api_bp.route('/choose_llm_txt', methods=['POST'])
+def choose_llm_txt():
+    try:
+        data = request.get_json()
+        url = data.get('url')
+        name = data.get('name')
+        
+        if not url:
+            return jsonify({
+                'error': 'No URL provided',
+                'status': 'error'
+            }), 400
+        
+        # Fetch the LLM.txt content
+        response = requests.get(url)
+        response.raise_for_status()  # Raises an HTTPError for bad responses
+        markdown = response.text
+        
+        # Create an artifact with the content
+        artifact = MarkdownArtifact(identifier='llm_text', title=f"{name.title()} LLM.txt", markdown=markdown)
+        
+        return json.dumps(artifact.dict())
+        
+    except requests.RequestException as e:
+        return jsonify({
+            'error': f'Failed to fetch LLM.txt: {str(e)}',
+            'status': 'error'
+        }), 500
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+

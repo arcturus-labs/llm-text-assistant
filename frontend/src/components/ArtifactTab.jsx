@@ -4,7 +4,7 @@ function ArtifactTab({ artifact, isActive, onContentChange }) {
   return (
     <div className="artifact-tab">
       <textarea
-        value={artifact.content}
+        value={artifact.content}//TODO! change this to be markdown
         onChange={(e) => onContentChange(artifact.identifier, e.target.value)}
         className="artifact-content"
       />
