@@ -56,3 +56,4 @@ fly deploy
 ### Deploy using actions
 
  Git commit and push to github. The action will build the frontend and deploy the application to fly.io.
+ 
