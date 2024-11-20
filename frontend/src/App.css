@@ -273,6 +273,7 @@
   border-radius: 8px;
   min-width: 300px;
   text-align: center;
+  color: #333;
 }
 
 .llm-dropdown {
@@ -284,6 +285,15 @@
   font-size: 16px;
   background: white;
   cursor: pointer;
+  color: #333;
+}
+
+.llm-dropdown option {
+  color: #333;
+}
+
+.llm-dropdown option:first-child {
+  color: #666;
 }
 
 .llm-dropdown:disabled {

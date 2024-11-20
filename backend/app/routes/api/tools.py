@@ -348,3 +348,32 @@ def set_up_tools(markdown_artifact: MarkdownArtifact):
         Tool(expand_section_schema, markdown_artifact.expand_section),
     ]
     return tools
+
+###########
+
+
+class SpecifyQuestionsTool:
+    def __init__(self):
+        self.questions = []
+    
+    def __call__(self, questions: list[str]) -> list[str]:
+        self.questions = questions
+        return None
+    
+def get_specify_questions_tool():
+    specify_questions_schema = {
+        "name": "specify_questions",
+        "description": "Specify a list of questions that could be answered by the attached LLM.txt document.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "questions": {
+                    "type": "array",
+                    "items": {"type": "string"}
+                }
+            },
+            "required": ["questions"]
+        }
+    }
+    return Tool(specify_questions_schema, SpecifyQuestionsTool())
+

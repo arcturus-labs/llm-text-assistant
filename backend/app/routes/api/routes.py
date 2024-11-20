@@ -1,7 +1,7 @@
 import json
 from flask import Blueprint, request, jsonify
 from .conversation import Conversation, Artifact
-from .tools import MarkdownArtifact, set_up_tools
+from .tools import MarkdownArtifact, get_specify_questions_tool, set_up_tools
 import requests
 import uuid
 
@@ -169,8 +169,22 @@ def choose_llm_txt():
         
         # Create an artifact with the content
         artifact = MarkdownArtifact(identifier='llm_text', title=f"{name.title()} LLM.txt", markdown=markdown)
+
+        specify_questions_tool = get_specify_questions_tool()
+        conversation = Conversation(
+            tools=[specify_questions_tool],
+            artifacts=[artifact],
+            model="claude-3-5-haiku-20241022",
+        )
+        # don't care about the response, just getting the questions from the tool call
+        _ = conversation.say("Specify 5 interesting examples quesetions about the attached artifact.")
         
-        return json.dumps(artifact.dict())
+        questions = specify_questions_tool.callable.questions
+
+        return jsonify({
+            'artifact': artifact.dict(),
+            'questions': questions,
+        })
         
     except requests.RequestException as e:
         print(f"Error in chat endpoint: {str(e)}", flush=True)

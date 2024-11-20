@@ -71,6 +71,7 @@ function App() {
   const subscriptionCheckRef = useRef();
   const [isLoading, setIsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(true);
+  const [suggestions, setSuggestions] = useState([]);
   const chatHistoryRef = useRef(null);
   const [selectedLlm, setSelectedLlm] = useState('');
   const [showLlmModal, setShowLlmModal] = useState(false);
@@ -89,13 +90,6 @@ function App() {
     }
     setShowLlmModal(true);
   }, []);
-
-  const suggestions = [//TODO! change these to be more useful
-    "I'm I want to put together an email for a client about the home listed at 192 Oak St. Can you pull the listing?",
-    //"What are the comps for that property?",
-    "Can you pull the email template and draft a new email?",
-    "Oh, I forgot to tell you. His name is Tim Sircy and my company name is Arcturus Real Estate."
-  ];
 
   const handleArtifactChange = (identifier, newContent) => {
     setArtifacts(artifacts.map(artifact => 
@@ -181,9 +175,12 @@ function App() {
         })
       });
       
-      const artifact = await response.json();
-      if (artifact) {
-        setArtifacts([...artifacts, artifact]);
+      const result = await response.json();
+      if (result.questions) {
+        setSuggestions(result.questions);
+      }
+      if (result.artifact) {
+        setArtifacts([...artifacts, result.artifact]);
         setShowLlmModal(false);
       }
     } catch (error) {
@@ -251,7 +248,7 @@ function App() {
           onArtifactChange={handleArtifactChange}
         />
       </div>
-      {showSuggestions && (
+      {showSuggestions && suggestions.length > 0 && (
         <div className="suggestions-panel">
           <div className="suggestions-title">Suggested Messages</div>
           <button 

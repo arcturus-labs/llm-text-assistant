@@ -145,9 +145,9 @@ Artifacts are self-contained pieces of content that can be referenced in the con
 """
 
 class Conversation:
-    def __init__(self, tools=None, messages=None, artifacts=None):
+    def __init__(self, tools=None, messages=None, artifacts=None, model="claude-3-5-sonnet-20241022"):
         self.client = anthropic.Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
-        self.model = "claude-3-5-sonnet-20241022"
+        self.model = model
         self.messages = messages or []
         self.artifacts = artifacts or []
         self.tools = tools or []
@@ -183,6 +183,12 @@ class Conversation:
                         "tool_use_id": tool_use.id,
                         "content": tool_result,
                     })
+                    if tool_result is None:
+                        artifacts, messages = self._extract_messages_and_artifacts()
+                        return {
+                            'messages': messages,
+                            'artifacts': artifacts,
+                        }   
 
             self.messages.append({"role": "assistant", "content": response.content})
             self.messages.append({    
