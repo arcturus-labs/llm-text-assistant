@@ -54,7 +54,21 @@ jobs:
           npm ci
           npm run build
       - uses: superfly/flyctl-actions/setup-flyctl@master
-      - run: |
+      - name: Verify secrets exist
+        run: |
+          if [ -z "${{ secrets.ANTHROPIC_API_KEY }}" ]; then
+            echo "Error: ANTHROPIC_API_KEY is not set"
+            exit 1
+          fi
+          if [ -z "${{ secrets.CONVERTKIT_API_KEY }}" ]; then
+            echo "Error: CONVERTKIT_API_KEY is not set"
+            exit 1
+          fi
+          if [ -z "${{ secrets.CONVERTKIT_API_SECRET }}" ]; then
+            echo "Error: CONVERTKIT_API_SECRET is not set"
+            exit 1
+          fi
+          
           flyctl secrets set ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
           flyctl secrets set CONVERTKIT_API_KEY=${{ secrets.CONVERTKIT_API_KEY }}
           flyctl secrets set CONVERTKIT_API_SECRET=${{ secrets.CONVERTKIT_API_SECRET }}
