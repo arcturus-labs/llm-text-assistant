@@ -21,10 +21,8 @@ def test_markdown_node_serialization():
 
     # Convert to JSON and back
     json_str = root.to_json()
-    print('000000000',json_str)#TODO! 
     reconstructed = MarkdownNode.from_json(json_str)
-    print('000000001',reconstructed.to_json())#TODO! 
-
+    
     # Verify the reconstruction
     assert reconstructed.heading == "Root"
     assert reconstructed.level == 1

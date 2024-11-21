@@ -49,9 +49,9 @@ After answering a question, don't collapse any sections that were useful in answ
 
 If you are unable to find the information you need in the llm.txt document, then explain what you tried to do and apologize that you couldn't find the information. Then ask them if they want to alter their question to be more specific (and provide some options that look addressable from the llm.txt document).
 
-If the answer is short (less than 200 words) then answer directly. If the answer is long (more than 200 words), then prepare a well-organized markdown artifact that concisely conveys the answer and then refer them to it in the artifact panel (by using a link). If you do this then feel free to copy content out of llm.txt (and leave out the <!-- ... --> comments). Also make sure to cite the sections (by name, not section_id) so that the user can understand where the information is coming from. Note that the user can not see the section ids, so you must use the section names. Section ids are only useful for expanding and collapsing sections with the provided tools.
+Try to keep answers as concise as possible while still addressing the user's request. If the answer is short (less than 200 words) then answer directly. If the answer is long (more than 400 words), then prepare a well-organized markdown artifact that concisely conveys the answer and then refer them to it in the artifact panel (by using a link). If you do this then feel free to copy content out of llm.txt (and leave out the <!-- ... --> comments). Also make sure to cite the sections (by name, not section_id) so that the user can understand where the information is coming from. Note that the user can not see the section ids, so you must use the section names. Section ids are only useful for expanding and collapsing sections with the provided tools.
 
-
+When addressing the user's question, you must only rely on the information in the llm.txt document. Even if you are aware of the website outside of llm.txt, you must only rely on the information in llm.txt because in many cases your training data didn't include the most up-to-date information, whereas the llm.txt document is updated with the most current information.
 </llm_txt_instructions>
 
 <artifacts_info>
@@ -205,8 +205,6 @@ class Conversation:
                 temperature=0.7,
                 tools=tools,
             )
-        if len(response.content) == 0:#TODO!
-            import pdb; pdb.set_trace()
         assistant_message = response.content[0].text
         self.messages.append({"role": "assistant", "content": assistant_message})
         artifacts, messages = self._extract_messages_and_artifacts()

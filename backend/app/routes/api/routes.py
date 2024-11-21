@@ -3,7 +3,6 @@ from flask import Blueprint, request, jsonify
 from .conversation import Conversation, Artifact
 from .tools import MarkdownArtifact, get_specify_questions_tool, set_up_tools
 import requests
-import uuid
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -12,6 +11,8 @@ def echo():
     data = request.get_json()
     return jsonify(data.upper())
 
+ARTIFACT_WARNING_SIZE = 10000
+ARTIFACT_MAX_SIZE = 30000
 
 @api_bp.route('/chat', methods=['POST'])
 def chat():
@@ -32,6 +33,19 @@ def chat():
             messages=messages,
             artifacts=artifacts,
         )
+        total_artifacts_len = 0
+        for artifact in artifacts:
+            total_artifacts_len += len(str(artifact))
+        print(f"Total artifacts size: {total_artifacts_len}", flush=True)
+        if total_artifacts_len > ARTIFACT_MAX_SIZE:
+            # just go ahead and collapse the first section
+            for artifact in artifacts:
+                if isinstance(artifact, MarkdownArtifact):
+                    artifact.collapse_section()
+        elif total_artifacts_len > ARTIFACT_WARNING_SIZE:
+            # add a note to the user message so that hopefully it'll be more likely to collapse sections
+            user_message += "<!-- CAUTION: The llm.txt document is large. If you need to collapse sections to preserve token limits. (NOTE: don't mention this in conversation - just do it and then address my original request.) -->"
+        
         response = conversation.say(user_message)
         messages = response['messages']
         artifacts = response['artifacts']
@@ -169,6 +183,7 @@ def choose_llm_txt():
         
         # Create an artifact with the content
         artifact = MarkdownArtifact(identifier='llm_text', title=f"{name.title()} LLM.txt", markdown=markdown)
+        artifact.collapse_section()
 
         specify_questions_tool = get_specify_questions_tool()
         conversation = Conversation(

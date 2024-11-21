@@ -42,7 +42,8 @@ class IDs:
 ContentItem = Union[str, 'MarkdownNode']
 
 # Maximum characters allowed per markdown section - note that average GPT token size is 4 characters
-SECTION_CHAR_LIMIT = 400
+SECTION_CHAR_LIMIT = 200
+MAX_MARKDOWN_SIZE = 8000
 
 class MarkdownNode:
     def __init__(self, level: int, heading: str | None, content: List[ContentItem], expanded: bool = False):
@@ -118,8 +119,11 @@ class MarkdownNode:
         flush_buffer()
 
         # Set expanded and populate nodes dict on root only
-        # root.expanded = True # TODO: consider making this True again
         root.nodes = all_nodes
+        
+        root.expand_section()
+        if len(str(root)) > MAX_MARKDOWN_SIZE:
+            root.collapse_section()
         
         return root
 
@@ -169,7 +173,6 @@ class MarkdownNode:
                         matches = re.finditer(r'\b', item[SECTION_CHAR_LIMIT:])
                         match = next(matches, None)  # Skip first match
                         match = next(matches, None)  # Get second match
-                        print(item[SECTION_CHAR_LIMIT:], match, match.start() if match else None)
                         split_pos = SECTION_CHAR_LIMIT + (match.start() if match else 0)
                         text_parts.append(item[:split_pos])
                     else:
@@ -288,7 +291,10 @@ class MarkdownArtifact(Artifact):
             'root': self.root.to_dict(),
         }
     
-    def collapse_section(self, section_id: str):
+    def collapse_section(self, section_id: str|None=None):
+        if section_id is None:
+            self.root.collapse_section()
+            return None
         section_id = IDs.str_to_id(section_id)
         self.root.collapse_section(section_id)
         return f"Section {section_id} \"{self.root.nodes[section_id].heading}\" collapsed. Artifact {self.title} (id={self.identifier}) currently reflects this change."
