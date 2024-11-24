@@ -167,6 +167,7 @@ function App() {
 
   const handleLlmSelect = async (llmName) => {
     setIsLlmLoading(true);
+    setSelectedLlm(llmName);
     try {
       const response = await fetch('/api/choose_llm_txt', {
         method: 'POST',
@@ -254,6 +255,8 @@ function App() {
         <ArtifactPanel 
           artifacts={artifacts} 
           onArtifactChange={handleArtifactChange}
+          toolName={selectedLlm}
+          originalLink={llm_text_urls[selectedLlm]}
         />
       </div>
       {showSuggestions && suggestions.length > 0 && (

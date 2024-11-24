@@ -175,7 +175,7 @@ def choose_llm_txt():
         markdown = response.text
         
         # Create an artifact with the content
-        artifact = MarkdownArtifact(identifier='llm_text', title=f"{name.title()} LLM.txt", markdown=markdown)
+        artifact = MarkdownArtifact(identifier='llm_text', title=f"Full llm.txt", markdown=markdown)
         artifact.expanded = False #TODO! remove the request to get summarized questions?
 
         specify_questions_tool = get_specify_questions_tool()
@@ -199,7 +199,7 @@ def choose_llm_txt():
         import traceback
         traceback.print_exc()
         return jsonify({
-            'error': f'Failed to fetch LLM.txt: {str(e)}',
+            'error': f'Failed to fetch llm.txt: {str(e)}',
             'status': 'error'
         }), 500
     except Exception as e:

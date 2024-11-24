@@ -77,4 +77,22 @@
 .tool-input, .tool-output {
   margin: 4px 0;
   word-break: break-word;
+}
+
+.panel-title {
+  margin: 0;
+  padding: 10px 20px;
+  background: #fff;
+  border-bottom: 1px solid #ccc;
+  color: #333;
+}
+
+.source-link {
+  color: #007bff;
+  text-decoration: none;
+  font-weight: normal;
+}
+
+.source-link:hover {
+  text-decoration: underline;
 } 

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import ArtifactTab from './ArtifactTab';
 import './ArtifactPanel.css';
 
-function ArtifactPanel({ artifacts, onArtifactChange }) {
+function ArtifactPanel({ artifacts, onArtifactChange, toolName, originalLink }) {
   const [activeTab, setActiveTab] = useState(0);
 
   useEffect(() => {
@@ -38,6 +38,9 @@ function ArtifactPanel({ artifacts, onArtifactChange }) {
 
   return (
     <div className="artifact-panel">
+      <h2 className="panel-title">
+        {toolName} llm.txt Sections <a href={originalLink} className="source-link">(source)</a>
+      </h2>
       <div className="artifact-tabs">
         {artifacts.map((artifact, index) => (
           <button
