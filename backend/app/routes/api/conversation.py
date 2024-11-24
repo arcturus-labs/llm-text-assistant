@@ -200,14 +200,18 @@ class Conversation:
             })
             
             # Get final response after tool use
-            response = self.client.messages.create(
-                model=self.model,
-                system=self._generate_system_message(self.artifacts),
-                messages=self.messages,
-                max_tokens=3000,
-                temperature=0.7,
-                tools=tools,
-            )
+            try:
+                response = self.client.messages.create(
+                    model=self.model,
+                    system=self._generate_system_message(self.artifacts),
+                    messages=self.messages,
+                    max_tokens=3000,
+                    temperature=0.7,
+                    tools=tools,
+                )
+            except Exception as e:
+                import pdb; pdb.set_trace()
+            
         if len(response.content) > 0:
             assistant_message = response.content[0].text
         else:

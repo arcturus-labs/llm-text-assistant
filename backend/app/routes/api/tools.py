@@ -123,7 +123,7 @@ class MarkdownNode:
         root.nodes = all_nodes
         
         root.expanded = True
-        if len(str(root)) > MAX_MARKDOWN_SIZE:
+        if len(root.to_string()) > MAX_MARKDOWN_SIZE:
             root.expanded = False
         
         return root

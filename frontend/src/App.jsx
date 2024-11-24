@@ -199,14 +199,18 @@ function App() {
       {showLlmModal && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h2>Select llm.txt</h2>
+            <h2>llm.txt Explorer</h2>
+            <p className="modal-description">
+              llm.txt is a standardized file that helps language models better understand websites by providing curated, LLM-friendly content and relevant links. It allows site owners to specify exactly what information should be used when answering questions about their platform.
+            </p>
+            <p className="modal-instruction">Please select a website's llm.txt to explore:</p>
             <select 
               className="llm-dropdown"
               onChange={(e) => handleLlmSelect(e.target.value)}
               disabled={isLlmLoading}
               value={selectedLlm}
             >
-              <option value="">Select an LLM...</option>
+              <option value="">Select an llm.txt...</option>
               {Object.keys(llm_text_urls).map(key => (
                 <option key={key} value={key}>
                   {key}

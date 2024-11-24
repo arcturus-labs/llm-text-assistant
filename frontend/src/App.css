@@ -269,11 +269,18 @@
 
 .modal-content {
   background: white;
-  padding: 20px;
+  padding: 25px;
   border-radius: 8px;
-  min-width: 300px;
-  text-align: center;
+  min-width: 400px;
+  max-width: 600px;
+  text-align: left;
   color: #333;
+}
+
+.modal-content h2 {
+  margin: 0;
+  color: #333;
+  font-size: 24px;
 }
 
 .llm-dropdown {
@@ -485,4 +492,19 @@
 /* Hide HTML comments */
 .artifact-tab :where(.comment) {
   display: none;
+}
+
+.modal-description {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #666;
+  margin: 15px 0;
+  text-align: left;
+}
+
+.modal-instruction {
+  font-size: 16px;
+  color: #333;
+  margin: 20px 0 10px;
+  font-weight: 500;
 }
