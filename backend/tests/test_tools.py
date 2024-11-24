@@ -118,7 +118,7 @@ Content 2"""
     assert section_id is not None
     
     # Test collapse
-    artifact.collapse_section(str(section_id))
+    artifact.collapse_section(str(section_id))#TODO! delete this
     assert not artifact.root.nodes[section_id].expanded
     
     # Test expand
@@ -131,7 +131,7 @@ def test_markdown_artifact_invalid_section_id():
     invalid_id = IDs.str_to_id("ffffffff")  # Create an invalid ID
     
     with pytest.raises(ValueError, match="Node with section_id=ffffffff not found"):
-        artifact.collapse_section(str(invalid_id))
+        artifact.collapse_section(str(invalid_id))#TODO! delete this
     
     with pytest.raises(ValueError, match="Node with section_id=ffffffff not found"):
         artifact.expand_section(str(invalid_id))

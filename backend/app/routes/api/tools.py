@@ -1,3 +1,4 @@
+import copy
 import json
 import re
 from typing import Union, List, Dict
@@ -42,7 +43,7 @@ class IDs:
 ContentItem = Union[str, 'MarkdownNode']
 
 # Maximum characters allowed per markdown section - note that average GPT token size is 4 characters
-SECTION_CHAR_LIMIT = 200
+SECTION_CHAR_LIMIT = 100
 MAX_MARKDOWN_SIZE = 8000
 
 class MarkdownNode:
@@ -121,9 +122,9 @@ class MarkdownNode:
         # Set expanded and populate nodes dict on root only
         root.nodes = all_nodes
         
-        root.expand_section()
+        root.expanded = True
         if len(str(root)) > MAX_MARKDOWN_SIZE:
-            root.collapse_section()
+            root.expanded = False
         
         return root
 
@@ -145,14 +146,8 @@ class MarkdownNode:
             return ''.join(parts)    
     
         if self.expanded:
-            # Show collapse comment
-            if root:
-                parts.append(f' <!-- Collapse this document with collapse_section("{self.section_id}") -->\n\n')
-            else:
-                parts.append(f' <!-- Section expanded - collapse with collapse_section("{self.section_id}") -->\n\n')
-            
             # Show full first text section and recurse to children
-            text_parts = []
+            text_parts = ['\n']
             for item in self.content:
                 if isinstance(item, str):
                     text_parts.append(item)
@@ -185,33 +180,6 @@ class MarkdownNode:
             parts.extend(text_parts)
     
         return ''.join(parts)
-
-    def expand_section(self, section_id: ID | None = None):
-        """Expands this section by setting expanded to True"""
-        if section_id is None or self.section_id == section_id:
-            self.expanded = True
-        elif self.nodes:
-            if section_id in self.nodes:
-                self.nodes[section_id].expand_section()
-            else:
-                raise ValueError(f"Node with section_id={section_id} not found")
-        else:
-            raise ValueError(f"Only the root node has a nodes dictionary")
-
-    def collapse_section(self, section_id: ID | None = None):
-        """Collapses this section and all child sections recursively"""
-        if section_id is None or self.section_id == section_id:
-            self.expanded = False
-            for item in self.content:
-                if isinstance(item, MarkdownNode):
-                    item.collapse_section() 
-        elif self.nodes:
-            if section_id in self.nodes:
-                self.nodes[section_id].collapse_section()
-            else:
-                raise ValueError(f"Node with section_id={section_id} not found")
-        else:
-            raise ValueError(f"Only the root node has a nodes dictionary")
 
     def to_dict(self) -> dict:
         """Convert the node to a dictionary representation."""
@@ -271,14 +239,18 @@ class MarkdownNode:
         return cls.from_dict(json.loads(json_str))
 
 ################
-
+#TODO! I have to add a nodes to the new root fo sub markdownnodes
 class MarkdownArtifact(Artifact):
-    def __init__(self, identifier, title, markdown: str|dict):# Move url processing to here instead of API
+    def __init__(self, identifier, title, markdown: str|dict|MarkdownNode):# Move url processing to here instead of API
         markdownNode = None
         if isinstance(markdown, str):
             markdownNode = MarkdownNode.from_markdown(markdown)
-        else:
+        elif isinstance(markdown, dict):
             markdownNode = MarkdownNode.from_dict(markdown['root'])
+        elif isinstance(markdown, MarkdownNode):
+            markdownNode = markdown
+        else:
+            raise ValueError("Invalid markdown type")   
         super().__init__(identifier, 'markdown', title, markdownNode.to_string())
         self.root = markdownNode
 
@@ -291,49 +263,19 @@ class MarkdownArtifact(Artifact):
             'root': self.root.to_dict(),
         }
     
-    def collapse_section(self, section_id: str|None=None):
-        if section_id is None:
-            self.root.collapse_section()
-            return None
-        section_id = IDs.str_to_id(section_id)
-        self.root.collapse_section(section_id)
-        return f"Section {section_id} \"{self.root.nodes[section_id].heading}\" collapsed. Artifact {self.title} (id={self.identifier}) currently reflects this change."
-
     def expand_section(self, section_id: str):
         section_id = IDs.str_to_id(section_id)
-        self.root.expand_section(section_id)
-        return f"Section {section_id} \"{self.root.nodes[section_id].heading}\" expanded. Artifact {self.title} (id={self.identifier}) currently reflects this change."
+        section = copy.deepcopy(self.root.nodes[section_id])
+        section.expanded = True
+        return str(Artifact(section.section_id, 'markdown', section.heading, section.to_string()))
     
-    
-collapse_section_schema = {
-    "name": "collapse_section",
-    "description": "Collapse a section of the markdown document to save memory and hide irrelevant content.\n\n"
-                  "- You should collapse sections that are confirmed to be irrelevant to the current topic\n"
-                  "- Collapse highest-level sections first when possible to maximize memory savings\n"
-                  "- When a parent section is collapsed, all subsections are automatically hidden\n"
-                  "- Multiple sections can be collapsed in parallel\n"
-                  "- collapse_section can also be used in parallel with expand_section",
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "section_id": {
-                "type": "string",
-                "description": "8-digit hexadecimal ID of the section to collapse (e.g. '04c8214b')",
-                "pattern": "^[0-9a-f]{8}$"
-            }
-        },
-        "required": ["section_id"]
-    }
-}
-
 expand_section_schema = {
     "name": "expand_section", 
     "description": "Expand a section of the markdown document to reveal its contents.\n\n"
                   "- Expand the most specific (lowest-level) relevant section first\n"
                   "- Multiple sections can be expanded in parallel\n"
                   "- You can expand any section regardless of parent section state (e.g. parent sections do not need to be expanded to view subsection content)\n"
-                  "- If expansion causes a MemoryOverflow error, try expanding smaller subsections instead\n"
-                  "- expand_section can also be used in parallel with collapse_section",
+                  "- If expansion causes a MemoryOverflow error, try expanding smaller subsections instead\n",
     "input_schema": {
         "type": "object",
         "properties": {
@@ -347,13 +289,8 @@ expand_section_schema = {
     }
 }
 
-
-def set_up_tools(markdown_artifact: MarkdownArtifact):
-    tools = [
-        Tool(collapse_section_schema, markdown_artifact.collapse_section),
-        Tool(expand_section_schema, markdown_artifact.expand_section),
-    ]
-    return tools
+def get_expand_markdown_section_tool(markdown_artifact: MarkdownArtifact):
+    return Tool(expand_section_schema, markdown_artifact.expand_section)
 
 ###########
 

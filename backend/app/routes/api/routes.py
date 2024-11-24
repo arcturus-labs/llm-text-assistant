@@ -1,7 +1,7 @@
 import json
 from flask import Blueprint, request, jsonify
 from .conversation import Conversation, Artifact
-from .tools import MarkdownArtifact, get_specify_questions_tool, set_up_tools
+from .tools import MarkdownArtifact, get_specify_questions_tool, get_expand_markdown_section_tool
 import requests
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
@@ -11,9 +11,6 @@ def echo():
     data = request.get_json()
     return jsonify(data.upper())
 
-ARTIFACT_WARNING_SIZE = 10000
-ARTIFACT_MAX_SIZE = 30000
-
 @api_bp.route('/chat', methods=['POST'])
 def chat():
     data = request.get_json()
@@ -22,30 +19,19 @@ def chat():
     messages = messages[:-1]
     messages = unprocess_tool_uses_and_results(messages)
     artifacts = convert_to_artifacts(data.get('artifacts', []))
-    
-    markdown_artifact = artifacts[0] if artifacts else None
-    assert markdown_artifact is not None, "No markdown artifact provided"
-    assert isinstance(markdown_artifact, MarkdownArtifact), "Markdown artifact is not a MarkdownArtifact"
-    tools = set_up_tools(markdown_artifact)
+    assert len(artifacts) >= 1, "At least one artifact is required and it must be a MarkdownArtifact"
+    assert isinstance(artifacts[0], MarkdownArtifact), "The first artifact must be a MarkdownArtifact"
+    markdown_artifact = artifacts[0]
+    expand_markdown_section_tool = get_expand_markdown_section_tool(markdown_artifact)
+    tools = [expand_markdown_section_tool]
+
     try:
+        # Choose conversation type based on data
         conversation = Conversation(
             tools=tools,
             messages=messages,
             artifacts=artifacts,
         )
-        total_artifacts_len = 0
-        for artifact in artifacts:
-            total_artifacts_len += len(str(artifact))
-        print(f"Total artifacts size: {total_artifacts_len}", flush=True)
-        if total_artifacts_len > ARTIFACT_MAX_SIZE:
-            # just go ahead and collapse the first section
-            for artifact in artifacts:
-                if isinstance(artifact, MarkdownArtifact):
-                    artifact.collapse_section()
-        elif total_artifacts_len > ARTIFACT_WARNING_SIZE:
-            # add a note to the user message so that hopefully it'll be more likely to collapse sections
-            user_message += "<!-- CAUTION: The llm.txt document is large. If you need to collapse sections to preserve token limits. (NOTE: don't mention this in conversation - just do it and then address my original request.) -->"
-        
         response = conversation.say(user_message)
         messages = response['messages']
         artifacts = response['artifacts']
@@ -65,6 +51,9 @@ def chat():
         }), 500
     
 def process_tool_uses_and_results(messages):
+    """
+    Process the messages to replace tool uses with combined use+result
+    """
     processed_messages = []
     tool_uses_content = None
     
@@ -102,8 +91,9 @@ def process_tool_uses_and_results(messages):
             tool_uses_content = None
             continue
             
-        # Add any other messages as-is
-        processed_messages.append(message)
+        # Add any other messages as-is unless it's content is empty
+        if len(message['content']) > 0:
+            processed_messages.append(message)
         
     return processed_messages
 
@@ -153,15 +143,18 @@ def unprocess_tool_uses_and_results(messages):
     
     return unprocessed_messages
 
-
 def convert_to_artifacts(artifacts):
-    artifact_list = []
+    new_artifacts = []
     for artifact in artifacts:
-        if 'root' in artifact:
-            artifact_list.append(MarkdownArtifact(identifier=artifact['identifier'], title=artifact['title'], markdown=artifact))
+        if 'root' in artifact: # if the artifact has a root, it's a MarkdownArtifact - this is a bit of a hack
+            new_artifacts.append(MarkdownArtifact(
+                identifier=artifact['identifier'],
+                title=artifact['title'],
+                markdown=artifact
+            ))
         else:
-            artifact_list.append(Artifact(**artifact))
-    return artifact_list
+            new_artifacts.append(Artifact(**artifact))
+    return new_artifacts
 
 @api_bp.route('/choose_llm_txt', methods=['POST'])
 def choose_llm_txt():
@@ -183,7 +176,7 @@ def choose_llm_txt():
         
         # Create an artifact with the content
         artifact = MarkdownArtifact(identifier='llm_text', title=f"{name.title()} LLM.txt", markdown=markdown)
-        artifact.collapse_section()
+        artifact.expanded = False #TODO! remove the request to get summarized questions?
 
         specify_questions_tool = get_specify_questions_tool()
         conversation = Conversation(

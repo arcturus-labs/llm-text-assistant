@@ -92,6 +92,10 @@ function App() {
     setShowLlmModal(true);
   }, []);
 
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
   const handleArtifactChange = (identifier, newContent) => {
     setArtifacts(artifacts.map(artifact => 
       artifact.identifier === identifier 
@@ -137,7 +141,6 @@ function App() {
         if (result.artifacts) {
           setArtifacts(result.artifacts);
         }
-        setTimeout(scrollToBottom, 100);
       } else {
         setMessages([...newMessages, { role: 'assistant', content: 'Error: Failed to get response' }]);
       }

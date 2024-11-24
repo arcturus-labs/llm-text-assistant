@@ -1,5 +1,6 @@
 import re
 import os
+from typing import List
 
 import anthropic
 
@@ -41,15 +42,13 @@ The llm.txt document is a new standard for conveying information about an websit
 
 The llm.txt document is typically very long and not able to fit in the a typicall LLM token window, therefore the sections are collapsed by default. If you want to navigate the document, you must expand the sections using the provided tools.
 
-When answering a question about the llm.txt document, first read over the llm.txt in it's existing state (collapsed by default), and then selectively open any sections that might be necessary to address the user's question. Sometimes a section may not have the expected information and may be irrelevant to the conversation. In this case it is important to collapse the section (again, using the provided tools) so that the total size of the document is minimized.
+When answering a question about the llm.txt document, first read over the llm.txt in it's existing state (collapsed by default), and then selectively open any sections that might be necessary to address the user's question.
 
-Each time the user asks a question, first consider if the currently open sections are still relevant. If they are not, then collapse them. You can collapse all the open sections at once by making parallel calls to collapse individual sections. Do _not_ collapse any section at the end of your response, because the user's next question might be a followon question about the same thing. Instead wait until you receive the next question before collapsing any sections.
-
-After answering a question, don't collapse any sections that were useful in answering the question because the next question might be about the same thing.
+IMPORTANT: As soon as a user asks a question, close all the open irrelevant artifacts except the one with identifier "llm_text". Always do this ***before*** answering a question so that we can save memory and reduce clutter.
 
 If you are unable to find the information you need in the llm.txt document, then explain what you tried to do and apologize that you couldn't find the information. Then ask them if they want to alter their question to be more specific (and provide some options that look addressable from the llm.txt document).
 
-Try to keep answers as concise as possible while still addressing the user's request. If the answer is short (less than 200 words) then answer directly. If the answer is long (more than 400 words), then prepare a well-organized markdown artifact that concisely conveys the answer and then refer them to it in the artifact panel (by using a link). If you do this then feel free to copy content out of llm.txt (and leave out the <!-- ... --> comments). Also make sure to cite the sections (by name, not section_id) so that the user can understand where the information is coming from. Note that the user can not see the section ids, so you must use the section names. Section ids are only useful for expanding and collapsing sections with the provided tools.
+Try to keep answers as concise as possible while still addressing the user's request. Feel free to copy relevant passages from other artifacts (leave out the <!-- ... --> comments). Also make sure to cite the sections (by name, not section_id) so that the user can understand where the information is coming from. Note that the user can not see the section_id, so you must use the section names. Section ids are only useful for expanding and collapsing sections with the provided tools.
 
 When addressing the user's question, you must only rely on the information in the llm.txt document. Even if you are aware of the website outside of llm.txt, you must only rely on the information in llm.txt because in many cases your training data didn't include the most up-to-date information, whereas the llm.txt document is updated with the most current information.
 </llm_txt_instructions>
@@ -139,6 +138,7 @@ Artifacts are self-contained pieces of content that can be referenced in the con
     </artifact>
     ```
 - All existing artifacts are presented in the <artifacts> tag below.
+- IMPORTANT:When receiving a message from the user, the first thing you should do is close ALL open artifacts except for the one with identifier="llm_text". Use the close_artifacts. This must only be done when the user asks a question. Once you've started speaking to the user you can no longer close artifacts.
 </artifact_instructions>
 
 </artifacts_info>
@@ -151,7 +151,8 @@ class Conversation:
         self.messages = messages or []
         self.artifacts = artifacts or []
         self.tools = tools or []
-        
+        self.tools.append(Tool(close_artifacts_schema, self._close_artifacts))
+
     def say(self, message):
         tools = [t.schema for t in self.tools]
         
@@ -166,8 +167,10 @@ class Conversation:
             messages=self.messages,
             max_tokens=3000,
             temperature=0.7,
-            tools=tools,#TODO! make sure to add tools!
+            tools=tools,
         )
+
+        tools = [t.schema for t in self.tools if t.name != "close_artifacts"] # only use close_artifacts for the first tool call
 
         # Handle potential tool use
         while response.stop_reason == "tool_use":
@@ -205,7 +208,11 @@ class Conversation:
                 temperature=0.7,
                 tools=tools,
             )
-        assistant_message = response.content[0].text
+        if len(response.content) > 0:
+            assistant_message = response.content[0].text
+        else:
+            assistant_message = ""
+        
         self.messages.append({"role": "assistant", "content": assistant_message})
         artifacts, messages = self._extract_messages_and_artifacts()
         
@@ -331,3 +338,36 @@ class Conversation:
         new_content += text[last_end:]
         
         return new_content, artifacts
+    
+    def _close_artifacts(self, identifiers: List[str]):
+        artifacts = []
+        if "llm_text" in identifiers:
+            identifiers.remove("llm_text")
+        for artifact in self.artifacts:
+            if artifact.identifier not in identifiers:
+                artifacts.append(artifact)
+
+        self.artifacts = artifacts
+        return f"Closed {len(identifiers)} artifacts."
+
+
+close_artifacts_schema = {
+    "name": "close_artifacts",
+    "description": "Close and remove artifacts that are no longer needed.\n\n"
+                  "- Close artifacts that are confirmed to be irrelevant to the current topic\n"
+                  "- Multiple artifacts can be closed in parallel\n"
+                  "- Closing artifacts helps save memory and reduce clutter",
+    "input_schema": {
+        "type": "object", 
+        "properties": {
+            "identifiers": {
+                "type": "array",
+                "description": "List of artifact identifiers to close",
+                "items": {
+                    "type": "string"
+                }
+            }
+        },
+        "required": ["identifiers"]
+    }
+}
