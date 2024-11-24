@@ -267,6 +267,14 @@ class MarkdownArtifact(Artifact):
         section_id = IDs.str_to_id(section_id)
         section = copy.deepcopy(self.root.nodes[section_id])
         section.expanded = True
+        # recursively expand all children until MAX_MARKDOWN_SIZE is reached - use section.content
+        # this is really dirty
+        for item in section.content:
+            if isinstance(item, MarkdownNode):
+                item.expanded = True
+                if len(str(item)) > MAX_MARKDOWN_SIZE:
+                    item.expanded = False
+                    return str(Artifact(section.section_id, 'markdown', section.heading, section.to_string()))
         return str(Artifact(section.section_id, 'markdown', section.heading, section.to_string()))
     
 expand_section_schema = {
