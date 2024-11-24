@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
+import remarkGfm from 'remark-gfm';
 
 function MessageContent({ content }) {
   // Helper function to safely render HTML content
@@ -26,15 +29,15 @@ function MessageContent({ content }) {
   if (typeof content === 'string') {
     return (
       <span className="message-text">
-        {content.split('\n').map((line, i) => (
-          <React.Fragment key={i}>
-            <span 
-              style={{ display: 'inline' }} 
-              dangerouslySetInnerHTML={createMarkup(line)} 
-            />
-            {i < content.split('\n').length - 1 && <br />}
-          </React.Fragment>
-        ))}
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          rehypePlugins={[rehypeRaw]}
+          components={{
+            p: ({children}) => <span style={{ display: 'inline' }}>{children}</span>
+          }}
+        >
+          {content}
+        </ReactMarkdown>
       </span>
     );
   }
@@ -53,12 +56,15 @@ function MessageContent({ content }) {
       if (item.type === 'text') {
         return (
           <React.Fragment key={index}>
-            {item.text.split('\n').map((line, i) => (
-              <React.Fragment key={i}>
-                <span dangerouslySetInnerHTML={createMarkup(line)} />
-                {i < item.text.split('\n').length - 1 && <br />}
-              </React.Fragment>
-            ))}
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeRaw]}
+              components={{
+                p: ({children}) => <span style={{ display: 'inline' }}>{children}</span>
+              }}
+            >
+              {item.text}
+            </ReactMarkdown>
           </React.Fragment>
         );
       }
