@@ -44,7 +44,7 @@ ContentItem = Union[str, 'MarkdownNode']
 
 # Maximum characters allowed per markdown section - note that average GPT token size is 4 characters
 SECTION_CHAR_LIMIT = 100
-MAX_MARKDOWN_SIZE = 8000
+MAX_MARKDOWN_SIZE = 14000
 
 class MarkdownNode:
     def __init__(self, level: int, heading: str | None, content: List[ContentItem], expanded: bool = False):
