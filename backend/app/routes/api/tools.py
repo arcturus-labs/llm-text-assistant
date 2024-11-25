@@ -79,7 +79,26 @@ class MarkdownNode:
         while i < len(tokens):
             token = tokens[i]
             
-            if token.type == 'heading_open':
+            if token.type == 'fence':
+                flush_buffer()
+                code_content = token.content
+                code_info = token.info
+                
+                # Skip HTML content inside code blocks
+                if '<div' not in code_content and '</div>' not in code_content:
+                    if code_info:
+                        stack[-1].content.append(f'```{code_info}\n{code_content}```\n\n')
+                    else:
+                        stack[-1].content.append(f'```\n{code_content}```\n\n')
+                
+                i += 1
+                
+            elif token.type == 'html_block' or token.type == 'html_inline':
+                # Skip HTML tokens
+                i += 1
+                continue
+                
+            elif token.type == 'heading_open':
                 # Get heading level
                 level = int(token.tag[1])  # h1 = 1, h2 = 2, etc.
                 
