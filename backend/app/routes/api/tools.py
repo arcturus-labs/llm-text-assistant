@@ -86,6 +86,10 @@ class MarkdownNode:
                 
                 # Skip HTML content inside code blocks
                 if '<div' not in code_content and '</div>' not in code_content:
+                    # Add newlines before code block if needed
+                    if stack[-1].content and not str(stack[-1].content[-1]).endswith('\n\n'):
+                        stack[-1].content.append('\n\n')
+                    
                     if code_info:
                         stack[-1].content.append(f'```{code_info}\n{code_content}```\n\n')
                     else:
@@ -99,10 +103,11 @@ class MarkdownNode:
                 continue
                 
             elif token.type == 'heading_open':
-                # Get heading level
-                level = int(token.tag[1])  # h1 = 1, h2 = 2, etc.
+                # Ensure proper spacing before headers
+                flush_buffer()
+                text_buffer.append('\n\n')
                 
-                # Get heading text from next token
+                level = int(token.tag[1])
                 heading_text = tokens[i + 1].content
                 
                 # Flush any accumulated text to current node
@@ -121,17 +126,24 @@ class MarkdownNode:
                 all_nodes[new_node.section_id] = new_node
                 
                 # Skip the heading content and closing tokens
-                i += 2
-                
+                i += 3  # Skip heading_open, inline content, and heading_close
+                continue
+            
             elif token.type == 'inline':
-                # Only append non-empty content
                 if token.content:
+                    # Add a space if the buffer isn't empty and doesn't end with whitespace
+                    if text_buffer and not text_buffer[-1].endswith(('\n', ' ')):
+                        text_buffer.append(' ')
                     text_buffer.append(token.content)
             
-            elif token.type in ['paragraph_open', 'paragraph_close']:
-                # Handle paragraph breaks
-                if token.type == 'paragraph_close':
+            elif token.type == 'paragraph_open':
+                # Add newlines before paragraphs if we're not at the start
+                if text_buffer:
                     text_buffer.append('\n\n')
+            
+            elif token.type == 'paragraph_close':
+                # Add newlines after paragraphs
+                text_buffer.append('\n\n')
             
             i += 1
         
@@ -182,20 +194,31 @@ class MarkdownNode:
             text_parts = []
             for i, item in enumerate(self.content):
                 if isinstance(item, str):
-                    if len(item) > SECTION_CHAR_LIMIT:
-                        # Find first word boundary after limit
-                        matches = re.finditer(r'\b', item[SECTION_CHAR_LIMIT:])
-                        match = next(matches, None)  # Skip first match
-                        match = next(matches, None)  # Get second match
-                        split_pos = SECTION_CHAR_LIMIT + (match.start() if match else 0)
-                        text_parts.append(item[:split_pos])
+                    # Check if this is a code block
+                    if item.startswith('```'):
+                        # For code blocks, either include the whole thing or skip it
+                        if len(item) > SECTION_CHAR_LIMIT:
+                            # Find the end of the code block
+                            code_end = item.find('```', 3)  # Start search after opening ```
+                            if code_end != -1:
+                                # Include up to the closing ``` and newlines
+                                text_parts.append(item[:code_end + 3] + '\n\n')
+                        else:
+                            text_parts.append('\n\n' + item)
                     else:
-                        text_parts.append(item)
+                        # Normal text truncation logic
+                        if len(item) > SECTION_CHAR_LIMIT:
+                            matches = re.finditer(r'\b', item[SECTION_CHAR_LIMIT:])
+                            match = next(matches, None)  # Skip first match
+                            match = next(matches, None)  # Get second match
+                            split_pos = SECTION_CHAR_LIMIT + (match.start() if match else 0)
+                            text_parts.append(item[:split_pos])
+                        else:
+                            text_parts.append(item)
                 else:  # MarkdownNode
                     text_parts.append(item.to_string(parent_expanded=False))
                 if i == 0:
-                    # special case, if there is no text, we still need to show the expand comment
-                    text_parts.append(f"...\n\n")                    
+                    text_parts.append("...\n\n")
             parts.extend(text_parts)
     
         return ''.join(parts)
