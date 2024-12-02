@@ -22,6 +22,7 @@ def chat():
     assert len(artifacts) >= 1, "At least one artifact is required and it must be a MarkdownArtifact"
     assert isinstance(artifacts[0], MarkdownArtifact), "The first artifact must be a MarkdownArtifact"
     markdown_artifact = artifacts[0]
+    artifacts = [markdown_artifact]
     expand_markdown_section_tool = get_expand_markdown_section_tool(markdown_artifact)
     tools = [expand_markdown_section_tool]
 

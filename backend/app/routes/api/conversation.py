@@ -138,7 +138,6 @@ Artifacts are self-contained pieces of content that can be referenced in the con
     </artifact>
     ```
 - All existing artifacts are presented in the <artifacts> tag below.
-- IMPORTANT:When receiving a message from the user, the first thing you should do is close ALL open artifacts except for the one with identifier="llm_text". Use the close_artifacts. This must only be done when the user asks a question. Once you've started speaking to the user you can no longer close artifacts.
 </artifact_instructions>
 
 </artifacts_info>
@@ -151,7 +150,6 @@ class Conversation:
         self.messages = messages or []
         self.artifacts = artifacts or []
         self.tools = tools or []
-        self.tools.append(Tool(close_artifacts_schema, self._close_artifacts))
 
     def say(self, message):
         tools = [t.schema for t in self.tools]
@@ -169,8 +167,6 @@ class Conversation:
             temperature=0.7,
             tools=tools,
         )
-
-        tools = [t.schema for t in self.tools if t.name != "close_artifacts"] # only use close_artifacts for the first tool call
 
         # Handle potential tool use
         while response.stop_reason == "tool_use":
@@ -343,35 +339,3 @@ class Conversation:
         
         return new_content, artifacts
     
-    def _close_artifacts(self, identifiers: List[str]):
-        artifacts = []
-        if "llm_text" in identifiers:
-            identifiers.remove("llm_text")
-        for artifact in self.artifacts:
-            if artifact.identifier not in identifiers:
-                artifacts.append(artifact)
-
-        self.artifacts = artifacts
-        return f"Closed {len(identifiers)} artifacts."
-
-
-close_artifacts_schema = {
-    "name": "close_artifacts",
-    "description": "Close and remove artifacts that are no longer needed.\n\n"
-                  "- Close artifacts that are confirmed to be irrelevant to the current topic\n"
-                  "- Multiple artifacts can be closed in parallel\n"
-                  "- Closing artifacts helps save memory and reduce clutter",
-    "input_schema": {
-        "type": "object", 
-        "properties": {
-            "identifiers": {
-                "type": "array",
-                "description": "List of artifact identifiers to close",
-                "items": {
-                    "type": "string"
-                }
-            }
-        },
-        "required": ["identifiers"]
-    }
-}
