@@ -18,4 +18,4 @@ cd ../backend
 
 # Run tests with correct PYTHONPATH
 echo "Running backend tests..."
-PYTHONPATH=$PYTHONPATH:$(pwd)/.. pytest -v
+PYTHONPATH=$PYTHONPATH:$(pwd)/.. pytest -v "$@"

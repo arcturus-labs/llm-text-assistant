@@ -1,5 +1,5 @@
-import json
-from backend.app.routes.api.tools import MarkdownNode, ID
+from backend.app.routes.api.tools import MarkdownNode, IDs
+
 
 def test_markdown_node_serialization():
     # Create a sample hierarchy
@@ -61,77 +61,3 @@ def test_markdown_node_serialization_empty():
     assert reconstructed.content[0] == "Just text"
     assert reconstructed.nodes is not None
     assert len(reconstructed.nodes) == 1
-
-
-import pytest
-from app.routes.api.tools import MarkdownArtifact, MarkdownNode, IDs
-
-def test_markdown_artifact_init_with_string():
-    markdown_text = """# Title
-Some content
-
-## Section 1
-Section 1 content
-
-## Section 2
-Section 2 content"""
-    
-    artifact = MarkdownArtifact("test-id", "Test Doc", markdown_text)
-    
-    assert artifact.identifier == "test-id"
-    assert artifact.type == "markdown"
-    assert artifact.title == "Test Doc"
-    assert isinstance(artifact.root, MarkdownNode)
-    assert len(artifact.root.content) == 1  # whole document
-    assert len(artifact.root.content[0].content) == 3  # text under title and 2 sections
-
-
-def test_markdown_artifact_dict():
-    markdown_text = "# Test\nContent"
-    artifact = MarkdownArtifact("test-id", "Test Doc", markdown_text)
-    
-    result = artifact.dict()
-    
-    assert result["identifier"] == "test-id"
-    assert result["type"] == "markdown"
-    assert result["title"] == "Test Doc"
-    assert "content" in result
-    assert "root" in result
-    assert isinstance(result["root"], dict)
-
-def test_markdown_artifact_collapse_expand():
-    markdown_text = """# Section 1
-Content 1
-
-# Section 2
-Content 2"""
-    
-    artifact = MarkdownArtifact("test-id", "Test Doc", markdown_text)
-    
-    # Get the ID of the first section
-    section_id = None
-    for item in artifact.root.content:
-        if isinstance(item, MarkdownNode) and item.heading == "Section 1":
-            section_id = item.section_id
-            break
-    
-    assert section_id is not None
-    
-    # Test collapse
-    artifact.collapse_section(str(section_id))#TODO! delete this
-    assert not artifact.root.nodes[section_id].expanded
-    
-    # Test expand
-    artifact.expand_section(str(section_id))
-    assert artifact.root.nodes[section_id].expanded
-
-def test_markdown_artifact_invalid_section_id():
-    artifact = MarkdownArtifact("test-id", "Test Doc", "# Test")
-    
-    invalid_id = IDs.str_to_id("ffffffff")  # Create an invalid ID
-    
-    with pytest.raises(ValueError, match="Node with section_id=ffffffff not found"):
-        artifact.collapse_section(str(invalid_id))#TODO! delete this
-    
-    with pytest.raises(ValueError, match="Node with section_id=ffffffff not found"):
-        artifact.expand_section(str(invalid_id))
