@@ -157,8 +157,8 @@ def convert_to_artifacts(artifacts):
             new_artifacts.append(Artifact(**artifact))
     return new_artifacts
 
-@api_bp.route('/choose_llm_txt', methods=['POST'])
-def choose_llm_txt():
+@api_bp.route('/choose_llms_txt', methods=['POST'])
+def choose_llms_txt():
     try:
         data = request.get_json()
         url = data.get('url')
@@ -170,13 +170,13 @@ def choose_llm_txt():
                 'status': 'error'
             }), 400
         
-        # Fetch the LLM.txt content
+        # Fetch the llms.txt content
         response = requests.get(url)
         response.raise_for_status()  # Raises an HTTPError for bad responses
         markdown = response.text
         
         # Create an artifact with the content
-        artifact = MarkdownArtifact(identifier='llm_text', title=f"Full llm.txt", markdown=markdown)
+        artifact = MarkdownArtifact(identifier='llms_text', title=f"Abridged llms.txt", markdown=markdown)
         artifact.expanded = False #TODO! remove the request to get summarized questions?
 
         specify_questions_tool = get_specify_questions_tool()
@@ -200,7 +200,7 @@ def choose_llm_txt():
         import traceback
         traceback.print_exc()
         return jsonify({
-            'error': f'Failed to fetch llm.txt: {str(e)}',
+            'error': f'Failed to fetch llms.txt: {str(e)}',
             'status': 'error'
         }), 500
     except Exception as e:

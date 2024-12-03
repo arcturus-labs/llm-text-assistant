@@ -356,7 +356,7 @@ class SpecifyQuestionsTool:
 def get_specify_questions_tool():
     specify_questions_schema = {
         "name": "specify_questions",
-        "description": "Specify a list of questions that could be answered by the attached llm.txt document.",
+        "description": "Specify a list of questions that could be answered by the attached llms.txt document.",
         "input_schema": {
             "type": "object",
             "properties": {

@@ -39,7 +39,7 @@ function ArtifactPanel({ artifacts, onArtifactChange, toolName, originalLink }) 
   return (
     <div className="artifact-panel">
       <h2 className="panel-title">
-        {toolName} llm.txt Sections <a href={originalLink} className="source-link">(source)</a>
+        {toolName} llms.txt Sections <a href={originalLink} className="source-link">(source)</a>
       </h2>
       <div className="artifact-tabs">
         {artifacts.map((artifact, index) => (
